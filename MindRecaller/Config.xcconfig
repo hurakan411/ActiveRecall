@@ -1,0 +1,4 @@
+// Generated from .env - Do not edit directly
+// Run the generate_config.sh script to regenerate
+
+API_BASE_URL = http:/$()/localhost:8000

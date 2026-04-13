@@ -1,0 +1,301 @@
+"""
+MindRecaller Backend API
+========================
+Gemini 2.0 Flash を活用した教材解析・想起採点APIサーバー。
+"""
+
+import base64
+import json
+import os
+import re
+
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from google import genai
+from google.genai.errors import APIError
+from pydantic import BaseModel
+import asyncio
+
+# .env 読み込み
+load_dotenv()
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+HOST = os.getenv("HOST", "0.0.0.0")
+PORT = int(os.getenv("PORT", "8000"))
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
+
+if not GEMINI_API_KEY or GEMINI_API_KEY == "your_gemini_api_key_here":
+    print("⚠️  WARNING: GEMINI_API_KEY が設定されていません。.env ファイルを確認してください。")
+
+# Gemini クライアント初期化
+client = genai.Client(api_key=GEMINI_API_KEY)
+
+# FastAPI アプリ
+app = FastAPI(
+    title="MindRecaller API",
+    description="アクティブリコール学習アプリのバックエンドAPI",
+    version="1.0.0",
+)
+
+# CORS 設定
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ============================================================
+# リクエスト / レスポンス モデル
+# ============================================================
+
+class AnalyzeRequest(BaseModel):
+    """インプット解析リクエスト"""
+    image: str  # Base64エンコードされた画像データ
+
+
+class AnalyzeResponse(BaseModel):
+    """インプット解析レスポンス"""
+    title: str
+    sourceText: str
+
+
+class ScoreRequest(BaseModel):
+    """想起採点リクエスト"""
+    sourceText: str
+    recallText: str
+
+
+class ScoreResponse(BaseModel):
+    """想起採点レスポンス"""
+    logicScore: int
+    termScore: int
+    logicFeedback: str
+    missingKeywords: list[str]
+    missingConcepts: list[str]
+
+
+# ============================================================
+# ヘルスチェック
+# ============================================================
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "MindRecaller API", "version": "1.0.0"}
+
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}
+
+
+# ============================================================
+# 4.1 インプット解析エンドポイント
+# ============================================================
+
+ANALYZE_PROMPT = """あなたは教材テキスト抽出の専門家です。
+与えられた画像から、学習教材として利用できるテキストを構造化して抽出してください。
+
+以下のJSON形式で回答してください（JSONのみ出力、マークダウンや説明文は不要）:
+{
+    "title": "教材のタイトル（15文字以内で簡潔に）",
+    "sourceText": "抽出したテキスト全文（箇条書きや段落構造を保持）"
+}
+
+注意事項:
+- 画像に含まれるテキストを正確に読み取ること
+- 図表やグラフがある場合はその内容も文章で説明すること
+- タイトルは内容を端的に表すものにすること
+- sourceTextは学習に使える詳細な内容にすること
+"""
+
+
+@app.post("/api/analyze", response_model=AnalyzeResponse)
+async def analyze_input(req: AnalyzeRequest):
+    """画像からテキストを抽出し、タイトルと詳細テキストを返す"""
+    try:
+        # Base64 → バイナリ
+        image_bytes = base64.b64decode(req.image)
+
+        contents=[
+            {
+                "role": "user",
+                "parts": [
+                    {"text": ANALYZE_PROMPT},
+                    {
+                        "inline_data": {
+                            "mime_type": "image/jpeg",
+                            "data": req.image,
+                        }
+                    },
+                ],
+            }
+        ]
+
+        response_text = await _generate_with_retry(
+            model_name=GEMINI_MODEL,
+            contents=contents,
+        )
+
+        # レスポンステキストからJSONを抽出
+        raw = response_text.strip()
+        parsed = _extract_json(raw)
+
+        return AnalyzeResponse(
+            title=parsed.get("title", "無題"),
+            sourceText=parsed.get("sourceText", raw),
+        )
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="AI応答のJSON解析に失敗しました")
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str or "UNAVAILABLE" in error_str or "EXHAUSTED" in error_str:
+            return AnalyzeResponse(
+                title="【エラー】API制限",
+                sourceText="現在、AIの利用限界（分間アクセス上限、あるいは1日の無料枠上限）を超過しています。しばらく時間を置いてから再度お試しください。\n\nエラー詳細: " + error_str[:150]
+            )
+        raise HTTPException(status_code=500, detail=f"解析エラー: {error_str}")
+
+
+# ============================================================
+# 4.2 想起採点エンドポイント
+# ============================================================
+
+SCORE_PROMPT_TEMPLATE = """あなたは学習効果の評価専門家です。
+ユーザーが教材の内容を記憶から想起した結果を、元のテキストと比較して詳細に採点・分析してください。
+
+【元のテキスト（正解）】
+{source_text}
+
+【ユーザーの想起テキスト】
+{recall_text}
+
+以下の2つの観点で0〜100点の整数で採点し、JSON形式で回答してください（JSONのみ出力）:
+
+1. logicScore（論理スコア）: 内容の論理構造・流れ・因果関係をどれだけ正確に再現できているか
+2. termScore（用語スコア）: 専門用語・キーワード・固有名詞をどれだけ正確に記憶できているか
+
+また、学習の穴を詳細に埋めるために以下も含めてください:
+- logicFeedback: 全体的なフィードバック。できている点と今後の課題を200文字程度で、励ましを含めて記述。
+- missingKeywords: 元のテキストには含まれているが、ユーザーの想起テキストには含まれていない「実際の重要なキーワードや専門用語」（最大5つ）。
+- missingConcepts: ユーザーが言及できていない、あるいは浅い理解になっている「重要な概念・因果関係・論旨」。何がどう不足していたのか、元のテキストの内容を踏まえて具体的に詳細な文で記述してください（最大5つ）。
+
+出力形式:
+{{
+    "logicScore": 75,
+    "termScore": 60,
+    "logicFeedback": "フィードバック文...",
+    "missingKeywords": ["実際に書き漏らしたキーワード1", "実際に書き漏らしたキーワード2"],
+    "missingConcepts": ["〜という概念について、具体的な〇〇の理由や因果関係の説明が決定的に不足していました。", "〜の仕組みについて、本来言及すべき〇〇のプロセスが完全に抜け落ちています。"]
+}}
+"""
+
+
+@app.post("/api/score", response_model=ScoreResponse)
+async def score_recall(req: ScoreRequest):
+    """sourceText と recallText を比較し、セマンティックマッチングで採点"""
+    if not req.sourceText.strip():
+        raise HTTPException(status_code=400, detail="sourceTextが空です")
+    if not req.recallText.strip():
+        raise HTTPException(status_code=400, detail="recallTextが空です")
+
+    try:
+        prompt = SCORE_PROMPT_TEMPLATE.format(
+            source_text=req.sourceText,
+            recall_text=req.recallText,
+        )
+
+        response_text = await _generate_with_retry(
+            model_name=GEMINI_MODEL,
+            contents=prompt,
+        )
+
+        raw = response_text.strip()
+        parsed = _extract_json(raw)
+
+        return ScoreResponse(
+            logicScore=_clamp(parsed.get("logicScore", 50), 0, 100),
+            termScore=_clamp(parsed.get("termScore", 50), 0, 100),
+            logicFeedback=parsed.get("logicFeedback", "採点結果を取得できませんでした。"),
+            missingKeywords=parsed.get("missingKeywords", [])[:5],
+            missingConcepts=parsed.get("missingConcepts", [])[:3],
+        )
+
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="AI応答のJSON解析に失敗しました")
+    except Exception as e:
+        error_str = str(e)
+        if "429" in error_str or "UNAVAILABLE" in error_str or "EXHAUSTED" in error_str:
+            return ScoreResponse(
+                logicScore=0,
+                termScore=0,
+                logicFeedback="【API利用上限・高負荷エラー】現在、AIの利用枠（リクエスト数/日、または分間API制限）を超過しているか、サーバーが高負荷です。時間を置いてからお試しください。",
+                missingKeywords=["API制限", "レートリミット超過"],
+                missingConcepts=["時間が経過するまで採点AIは利用できません。しばらく（数分〜翌日）待ってから再試行してください。"]
+            )
+        raise HTTPException(status_code=500, detail=f"採点エラー: {error_str}")
+
+
+# ============================================================
+# ユーティリティ
+# ============================================================
+
+def _extract_json(text: str) -> dict:
+    """AI応答からJSON部分を抽出してパース"""
+    # ```json ... ``` ブロックを除去
+    cleaned = re.sub(r"```json\s*", "", text, flags=re.IGNORECASE)
+    cleaned = re.sub(r"```\s*", "", cleaned)
+    cleaned = cleaned.strip()
+    return json.loads(cleaned)
+
+async def _generate_with_retry(model_name: str, contents: list | str, retries: int = 5, delay: float = 3.0) -> str:
+    """API呼び出しをリトライとフォールバック付きで実行"""
+    current_model = model_name
+    fallback_model = "gemini-2.5-flash"
+    
+    for attempt in range(retries):
+        try:
+            response = client.models.generate_content(
+                model=current_model,
+                contents=contents,
+            )
+            return response.text
+        except APIError as e:
+            error_status = getattr(e, 'status', None)
+            if error_status == 503 or error_status == 429 or "503" in str(e) or "429" in str(e) or "RESOURCE_EXHAUSTED" in str(e) or "UNAVAILABLE" in str(e):
+                print(f"⚠️ API Limit/High Demand ({error_status}). Attempt {attempt + 1}/{retries}.")
+                if attempt == 1:
+                   print(f"Fallback to {fallback_model} for next attempt.")
+                   current_model = fallback_model
+                
+                if attempt < retries - 1:
+                    await asyncio.sleep(delay * (attempt + 1)) # Exponential backoff
+                    continue
+            raise e
+        except Exception as e:
+           raise e
+    raise Exception("Max retries exceeded.")
+
+
+def _clamp(value: int, min_val: int, max_val: int) -> int:
+    """値を指定範囲にクランプ"""
+    try:
+        return max(min_val, min(max_val, int(value)))
+    except (TypeError, ValueError):
+        return 50
+
+
+# ============================================================
+# エントリーポイント
+# ============================================================
+
+if __name__ == "__main__":
+    import uvicorn
+    print(f"🧠 MindRecaller API starting on http://{HOST}:{PORT}")
+    print(f"📖 API Docs: http://{HOST}:{PORT}/docs")
+    uvicorn.run("main:app", host=HOST, port=PORT, reload=True)

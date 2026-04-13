@@ -1,0 +1,16 @@
+# Environment variables (APIキーを含む)
+backend/.env
+MindRecaller/.env
+
+# Python
+backend/venv/
+backend/__pycache__/
+*.pyc
+
+# Xcode
+*.xcuserdata
+DerivedData/
+*.xcworkspace
+
+# OS
+.DS_Store
