@@ -9,9 +9,12 @@ final class StudyLog {
     var termScore: Int
     var recallText: String
     var logicFeedback: String
-    var missingKeywords: [String]
-    var missingConcepts: [String]
+    var highlightedSegmentsData: Data = Data()
     var createdAt: Date
+
+    // レガシー互換（マイグレーション用に残す）
+    var missingKeywords: [String] = []
+    var missingConcepts: [String] = []
 
     init(
         id: UUID = UUID(),
@@ -20,8 +23,7 @@ final class StudyLog {
         termScore: Int = 0,
         recallText: String = "",
         logicFeedback: String = "",
-        missingKeywords: [String] = [],
-        missingConcepts: [String] = [],
+        highlightedSegments: [APIService.HighlightedSegment] = [],
         createdAt: Date = Date()
     ) {
         self.id = id
@@ -30,9 +32,13 @@ final class StudyLog {
         self.termScore = termScore
         self.recallText = recallText
         self.logicFeedback = logicFeedback
-        self.missingKeywords = missingKeywords
-        self.missingConcepts = missingConcepts
+        self.highlightedSegmentsData = (try? JSONEncoder().encode(highlightedSegments)) ?? Data()
         self.createdAt = createdAt
+    }
+
+    /// デコード済みハイライトセグメント
+    var highlightedSegments: [APIService.HighlightedSegment] {
+        (try? JSONDecoder().decode([APIService.HighlightedSegment].self, from: highlightedSegmentsData)) ?? []
     }
 
     /// 総合スコア (0-100)

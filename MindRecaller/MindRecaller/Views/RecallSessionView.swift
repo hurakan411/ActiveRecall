@@ -1,6 +1,20 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - V字型シェイプ
+struct NordicVShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: .zero)
+        p.addLine(to: CGPoint(x: rect.width, y: 0))
+        p.addLine(to: CGPoint(x: rect.width, y: rect.height - 45))
+        p.addLine(to: CGPoint(x: rect.width / 2, y: rect.height))
+        p.addLine(to: CGPoint(x: 0, y: rect.height - 45))
+        p.closeSubpath()
+        return p
+    }
+}
+
 // MARK: - 画面4: アクティブリコール実行画面
 struct RecallSessionView: View {
     @Environment(\.modelContext) private var modelContext
@@ -18,22 +32,42 @@ struct RecallSessionView: View {
     @State private var showErrorAlert = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             AppColors.background.ignoresSafeArea()
-            ScrollView {
-                VStack(spacing: 24) {
-                    hintCard.opacity(appear ? 1 : 0).offset(y: appear ? 0 : 20)
-                    timerBadge.opacity(appear ? 1 : 0)
-                    inputArea.opacity(appear ? 1 : 0).offset(y: appear ? 0 : 20)
-                    submitBtn.opacity(appear ? 1 : 0)
+            
+            VStack(spacing: 0) {
+                headerSection
+                    .opacity(appear ? 1 : 0)
+                    .offset(y: appear ? 0 : -20)
+                    .zIndex(1)
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        timerBadge
+                            .padding(.top, 8)
+                            .opacity(appear ? 1 : 0)
+                            .offset(y: appear ? 0 : 10)
+                        
+                        inputArea
+                            .opacity(appear ? 1 : 0)
+                            .offset(y: appear ? 0 : 20)
+                        
+                        submitBtn
+                            .opacity(appear ? 1 : 0)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16).padding(.bottom, 40)
+                .scrollDismissesKeyboard(.interactively)
             }
+            
             if isSubmitting { scoringOverlay }
         }
-        .navigationTitle("リコール")
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        // ナビゲーションバーの背景を透明にしてV字シェイプを活かす
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .navigationDestination(isPresented: $showResult) {
             if let log = resultLog {
                 AnalysisResultView(studyLog: log, material: material)
@@ -51,50 +85,115 @@ struct RecallSessionView: View {
         }
     }
 
-    private var hintCard: some View {
-        VStack(spacing: 14) {
+    private var headerSection: some View {
+        VStack(spacing: 12) {
             HStack {
-                Image(systemName: "lightbulb.fill").font(.system(size: 16)).foregroundColor(AppColors.warning)
-                Text("ヒント：タイトルのみ").font(.system(size: 13, weight: .semibold)).foregroundColor(AppColors.textSecondary)
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 14))
+                    .foregroundColor(.white.opacity(0.85))
+                Text("ACTIVE RECALL")
+                    .font(.system(size: 12, weight: .black, design: .rounded))
+                    .foregroundColor(.white.opacity(0.85))
+                    .tracking(1.5)
                 Spacer()
             }
+            .padding(.top, 8)
+            
             Text(material.title)
-                .font(.system(size: 22, weight: .bold)).foregroundColor(AppColors.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading).lineSpacing(4)
-            Text("この教材の内容を思い出して、\nできるだけ詳しく書き出してください")
-                .font(.system(size: 13)).foregroundColor(AppColors.textSecondary)
-                .frame(maxWidth: .infinity, alignment: .leading).lineSpacing(3)
-        }.softCard()
+                .font(.system(size: 26, weight: .heavy))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineSpacing(4)
+                .padding(.bottom, 2)
+            
+            Text("この教材の内容を記憶から呼び起こし、\nできるだけ詳しく書き出してください。")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.white.opacity(0.9))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .lineSpacing(4)
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 16) // 文字を上に持ち上げるため余白を削減
+        .padding(.bottom, 48) // 下部にも少し余白を持たせてV字に余裕を作る
+        .background(
+            NordicVShape()
+                .fill(
+                    LinearGradient(
+                        colors: [AppColors.primary, Color(hex: "023E8A")],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .shadow(color: AppColors.primary.opacity(0.4), radius: 15, x: 0, y: 10)
+                .ignoresSafeArea(edges: .top)
+        )
     }
 
     private var timerBadge: some View {
         HStack {
-            Image(systemName: "clock").font(.system(size: 14)).foregroundColor(AppColors.textSecondary)
+            Image(systemName: "clock")
+                .font(.system(size: 14))
+                .foregroundColor(AppColors.textSecondary)
             Text(String(format: "%02d:%02d", seconds / 60, seconds % 60))
-                .font(.system(size: 16, weight: .medium, design: .monospaced)).foregroundColor(AppColors.textPrimary)
+                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                .foregroundColor(AppColors.textPrimary)
         }
-        .padding(.vertical, 8).padding(.horizontal, 16)
-        .background(AppColors.surface).clipShape(Capsule())
-        .overlay(Capsule().stroke(AppColors.border, lineWidth: 1))
+        .padding(.vertical, 10).padding(.horizontal, 20)
+        .background(AppColors.surface)
+        .clipShape(Capsule())
+        .shadow(color: AppColors.primary.opacity(0.1), radius: 8, x: 0, y: 4)
     }
 
     private var inputArea: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("想起入力").font(.system(size: 14, weight: .semibold)).foregroundColor(AppColors.textSecondary)
+                Text("入力")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(AppColors.textSecondary)
                 Spacer()
-                Text("\(recallText.count) 文字").font(.system(size: 12, weight: .medium)).foregroundColor(AppColors.textSecondary.opacity(0.7))
+                if !recallText.isEmpty {
+                    Button {
+                        // 少しアニメーションをつけて削除する
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            recallText = ""
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 12))
+                            Text("全削除")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(AppColors.textSecondary.opacity(0.1))
+                        .clipShape(Capsule())
+                    }
+                    .padding(.trailing, 4)
+                }
+                Text("\(recallText.count) 文字")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(AppColors.primary)
             }
             TextEditor(text: $recallText)
-                .font(.system(size: 16)).foregroundColor(AppColors.textPrimary)
-                .scrollContentBackground(.hidden).padding(14).frame(minHeight: 280)
-                .background(AppColors.surface).clipShape(RoundedRectangle(cornerRadius: 14))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(AppColors.border, lineWidth: 1))
+                .font(.system(size: 16))
+                .foregroundColor(AppColors.textPrimary)
+                .scrollContentBackground(.hidden)
+                .padding(16)
+                .frame(minHeight: 320)
+                .background(AppColors.surface)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(AppColors.border, lineWidth: 1))
+                .shadow(color: AppColors.primary.opacity(0.04), radius: 10, x: 0, y: 4)
                 .overlay(alignment: .topLeading) {
                     if recallText.isEmpty {
-                        Text("ここに覚えている内容を書き出してください...")
-                            .font(.system(size: 16)).foregroundColor(AppColors.textSecondary.opacity(0.5))
-                            .padding(18).allowsHitTesting(false)
+                        Text("学習したキーワードや概念、流れなどを\n思い出して自由に書き出しましょう...")
+                            .font(.system(size: 16))
+                            .foregroundColor(AppColors.textSecondary.opacity(0.5))
+                            .padding(20)
+                            .allowsHitTesting(false)
+                            .lineSpacing(6)
                     }
                 }
         }
@@ -105,20 +204,27 @@ struct RecallSessionView: View {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             submit()
         } label: {
-            HStack(spacing: 10) { Image(systemName: "sparkle.magnifyingglass"); Text("AIで解析する") }
+            HStack(spacing: 10) { Image(systemName: "sparkles"); Text("AIで解析する") }
         }
         .buttonStyle(PrimaryButtonStyle())
         .disabled(recallText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSubmitting)
         .opacity(recallText.isEmpty ? 0.5 : 1.0)
+        .padding(.top, 8)
     }
 
     private var scoringOverlay: some View {
         ZStack {
-            Color.black.opacity(0.3).ignoresSafeArea()
-            VStack(spacing: 16) {
+            Color.black.opacity(0.4).ignoresSafeArea()
+            VStack(spacing: 20) {
                 ProgressView().scaleEffect(1.2).tint(AppColors.primary)
-                Text("AIが採点中...").font(.system(size: 15, weight: .medium)).foregroundColor(AppColors.textPrimary)
-            }.padding(32).background(AppColors.surface).clipShape(RoundedRectangle(cornerRadius: 16)).shadow(color: .black.opacity(0.1), radius: 20)
+                Text("AIが採点中...")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(AppColors.textPrimary)
+            }
+            .padding(32)
+            .background(AppColors.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: .black.opacity(0.2), radius: 30)
         }
     }
 
@@ -127,7 +233,7 @@ struct RecallSessionView: View {
         Task {
             do {
                 let r = try await APIService.shared.scoreRecall(sourceText: material.sourceText, recallText: recallText)
-                let log = StudyLog(material: material, logicScore: r.logicScore, termScore: r.termScore, recallText: recallText, logicFeedback: r.logicFeedback, missingKeywords: r.missingKeywords, missingConcepts: r.missingConcepts)
+                let log = StudyLog(material: material, logicScore: r.logicScore, termScore: r.termScore, recallText: recallText, logicFeedback: r.logicFeedback, highlightedSegments: r.highlightedSegments)
                 await MainActor.run { modelContext.insert(log); resultLog = log; isSubmitting = false; UINotificationFeedbackGenerator().notificationOccurred(.success); showResult = true }
             } catch {
                 await MainActor.run { 

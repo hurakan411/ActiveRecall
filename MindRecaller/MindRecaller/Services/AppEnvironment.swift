@@ -6,22 +6,19 @@ enum AppEnvironment {
 
     /// API ベース URL
     static var apiBaseURL: String {
-        // 1. Info.plist (xcconfig経由) から読み込み
-        if let url = Bundle.main.infoDictionary?["API_BASE_URL"] as? String,
-           !url.isEmpty, url != "$(API_BASE_URL)" {
-            return url
-        }
-
-        // 2. バンドル内の .env ファイルから読み込み
+        // バンドル内の .env ファイルから読み込みフォールバック
         if let envURL = Bundle.main.url(forResource: ".env", withExtension: nil),
            let content = try? String(contentsOf: envURL, encoding: .utf8) {
             let values = parseEnv(content)
-            if let url = values["API_BASE_URL"] {
-                return url
-            }
+            
+            let useRender = (values["USE_RENDER_BACKEND"]?.lowercased() == "true")
+            let localUrl = values["LOCAL_API_BASE_URL"] ?? "http://localhost:8000"
+            let renderUrl = values["RENDER_API_BASE_URL"] ?? "https://your-render-app.onrender.com"
+            
+            return useRender ? renderUrl : localUrl
         }
 
-        // 3. デフォルト（ローカル開発用）
+        // デフォルト（ローカル開発用）
         return "http://localhost:8000"
     }
 

@@ -4,6 +4,7 @@ import SwiftData
 // MARK: - 画面5: 解析結果画面
 struct AnalysisResultView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var appRouter: AppRouter
     let studyLog: StudyLog
     let material: Material
     @State private var appear = false
@@ -20,16 +21,9 @@ struct AnalysisResultView: View {
                 feedbackCard
                     .opacity(appear ? 1 : 0)
                     .offset(y: appear ? 0 : 20)
-                if !studyLog.missingKeywords.isEmpty {
-                    missingKeywordsCard
-                        .opacity(appear ? 1 : 0)
-                        .offset(y: appear ? 0 : 20)
-                }
-                if !studyLog.missingConcepts.isEmpty {
-                    missingConceptsCard
-                        .opacity(appear ? 1 : 0)
-                        .offset(y: appear ? 0 : 20)
-                }
+                highlightedSourceCard
+                    .opacity(appear ? 1 : 0)
+                    .offset(y: appear ? 0 : 20)
                 actionButtons
                     .opacity(appear ? 1 : 0)
             }
@@ -118,50 +112,72 @@ struct AnalysisResultView: View {
         .softCard()
     }
 
-    // MARK: - Missing Keywords
-    private var missingKeywordsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+    // MARK: - Highlighted Source Text
+    private var highlightedSourceCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(AppColors.warning)
-                Text("不足キーワード")
+                Image(systemName: "doc.text.magnifyingglass")
+                    .foregroundColor(AppColors.primary)
+                Text("元のテキスト")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(AppColors.textPrimary)
             }
-            FlowLayout(spacing: 8) {
-                ForEach(studyLog.missingKeywords, id: \.self) { keyword in
-                    Text(keyword)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(AppColors.warning)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(AppColors.warning.opacity(0.1))
-                        .clipShape(Capsule())
+
+            // 凡例
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.green.opacity(0.25))
+                        .frame(width: 16, height: 16)
+                    Text("想起できた")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(AppColors.textSecondary)
                 }
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(Color.red.opacity(0.20))
+                        .frame(width: 16, height: 16)
+                    Text("想起できなかった")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            }
+            .padding(.bottom, 4)
+
+            // ハイライトされたテキスト表示
+            let segments = studyLog.highlightedSegments
+            if segments.isEmpty {
+                // フォールバック: セグメントがない場合は元テキストをそのまま表示
+                Text(material.sourceText)
+                    .font(.system(size: 14))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineSpacing(5)
+            } else {
+                buildHighlightedText(segments: segments)
+                    .lineSpacing(5)
             }
         }
         .softCard()
     }
 
-    // MARK: - Missing Concepts
-    private var missingConceptsCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "puzzlepiece.extension.fill")
-                    .foregroundColor(AppColors.primary)
-                Text("不足概念")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(AppColors.textPrimary)
+    /// セグメント配列からAttributedStringを構築して色分け表示
+    private func buildHighlightedText(segments: [APIService.HighlightedSegment]) -> some View {
+        var attributedString = AttributedString()
+
+        for segment in segments {
+            var part = AttributedString(segment.text)
+            if segment.recalled {
+                part.foregroundColor = Color(hex: "1B5E20") // 濃い緑
+                part.backgroundColor = Color.green.opacity(0.18)
+            } else {
+                part.foregroundColor = Color(hex: "B71C1C") // 濃い赤
+                part.backgroundColor = Color.red.opacity(0.15)
             }
-            ForEach(studyLog.missingConcepts, id: \.self) { concept in
-                HStack(spacing: 10) {
-                    Circle().fill(AppColors.primary.opacity(0.3)).frame(width: 6, height: 6)
-                    Text(concept)
-                        .font(.system(size: 14))
-                        .foregroundColor(AppColors.textPrimary)
-                }
-            }
+            part.font = .system(size: 14)
+            attributedString.append(part)
         }
-        .softCard()
+
+        return Text(attributedString)
     }
 
     // MARK: - Actions
@@ -177,11 +193,15 @@ struct AnalysisResultView: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(PrimaryButtonStyle())
-            Button { dismiss() } label: {
+            Button { 
+                appRouter.resetToHome()
+            } label: {
                 Text("ホームに戻る")
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
+            .padding(.top, 4)
         }
     }
 }

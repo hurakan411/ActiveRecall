@@ -1,13 +1,145 @@
 import SwiftUI
 import SwiftData
+import Lottie
+
+// MARK: - Jellyfish Particle Model
+struct JellyfishParticle: Identifiable {
+    let id = UUID()
+    let xRatio: CGFloat      // 水平位置 (0.0〜1.0)
+    let size: CGFloat         // フレームサイズ
+    let duration: Double      // 浮上にかかる秒数
+    let delay: Double         // 初回開始までの遅延
+    let opacity: Double       // 透明度
+    let animationSpeed: Double // Lottieアニメーション速度
+    let horizontalSway: CGFloat // 左右の揺れ幅
+}
+
+// MARK: - Single Jellyfish View
+struct FloatingJellyfishView: View {
+    let particle: JellyfishParticle
+
+    @State private var posY: CGFloat = 0
+    @State private var swayOffset: CGFloat = 0
+    @State private var hasStarted = false
+
+    // UIScreenから確実な画面サイズを取得
+    private var fullHeight: CGFloat { UIScreen.main.bounds.height }
+    private var fullWidth: CGFloat { UIScreen.main.bounds.width }
+
+    // 画面外の開始・終了位置（クラゲサイズ分の余裕を含む）
+    private var startY: CGFloat { fullHeight + particle.size }
+    private var endY: CGFloat { -particle.size }
+
+    var body: some View {
+        LottieView {
+            try await DotLottieFile.named("Jellyfish")
+        }
+        .playbackMode(.playing(.toProgress(1, loopMode: .loop)))
+        .animationSpeed(particle.animationSpeed)
+        .frame(width: particle.size, height: particle.size)
+        .opacity(hasStarted ? particle.opacity : 0)
+        .position(
+            x: fullWidth * particle.xRatio + swayOffset,
+            y: posY
+        )
+        .onAppear {
+            // 初期位置: 画面下端の外
+            posY = startY
+
+            // 遅延後に上昇開始
+            DispatchQueue.main.asyncAfter(deadline: .now() + particle.delay) {
+                hasStarted = true
+                // 左右の揺れ
+                withAnimation(
+                    .easeInOut(duration: Double.random(in: 3.0...5.0))
+                    .repeatForever(autoreverses: true)
+                ) {
+                    swayOffset = particle.horizontalSway
+                }
+                // 下から上へ繰り返し浮上
+                withAnimation(
+                    .linear(duration: particle.duration)
+                    .repeatForever(autoreverses: false)
+                ) {
+                    posY = endY
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Jellyfish Background
+struct JellyfishBackgroundView: View {
+    let particles: [JellyfishParticle]
+
+    init() {
+        // サイズのバリエーション: 各カテゴリから最低1匹ずつ出す
+        let sizePresets: [ClosedRange<CGFloat>] = [
+            40...55,    // 小さいクラゲ
+            65...85,    // 中くらいのクラゲ
+            95...120,   // 大きいクラゲ
+            130...160,  // とても大きいクラゲ
+        ]
+        var generated: [JellyfishParticle] = []
+
+        // まず各サイズカテゴリから1匹ずつ確保
+        for (i, range) in sizePresets.enumerated() {
+            let size = CGFloat.random(in: range)
+            let duration = Double(size) / 5.0 + Double.random(in: 8...14)
+            generated.append(
+                JellyfishParticle(
+                    xRatio: CGFloat.random(in: 0.05...0.95),
+                    size: size,
+                    duration: duration,
+                    delay: Double(i) * Double.random(in: 1.5...3.0),
+                    opacity: Double.random(in: 0.4...0.7),
+                    animationSpeed: Double.random(in: 0.35...0.65),
+                    horizontalSway: CGFloat.random(in: 5...16)
+                )
+            )
+        }
+        // 追加で2匹ランダムサイズ
+        for i in 4..<6 {
+            let range = sizePresets[Int.random(in: 0..<sizePresets.count)]
+            let size = CGFloat.random(in: range)
+            let duration = Double(size) / 5.0 + Double.random(in: 8...14)
+            generated.append(
+                JellyfishParticle(
+                    xRatio: CGFloat.random(in: 0.05...0.95),
+                    size: size,
+                    duration: duration,
+                    delay: Double(i) * Double.random(in: 1.5...3.0),
+                    opacity: Double.random(in: 0.4...0.7),
+                    animationSpeed: Double.random(in: 0.35...0.65),
+                    horizontalSway: CGFloat.random(in: 5...16)
+                )
+            )
+        }
+        self.particles = generated.shuffled()
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(particles) { particle in
+                FloatingJellyfishView(particle: particle)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+}
 
 // MARK: - 画面1: ホーム画面
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject var appRouter: AppRouter
     @Query(sort: \Material.createdAt, order: .reverse) private var materials: [Material]
 
     @State private var showNewMaterial = false
     @State private var appearAnimation = false
+    @State private var dailyTip: String = ""
+    @State private var selectedRecallMaterial: Material?
 
     private var todayStudyCount: Int {
         let calendar = Calendar.current
@@ -24,37 +156,57 @@ struct HomeView: View {
         Array(materials.prefix(5))
     }
 
+    private let studyTips = [
+        "何も見ずに思い出すことが、記憶を最も強くします。",
+        "間違えても大丈夫！それが脳の成長のサインです。",
+        "復習は「読む」のではなく、「思い出す」のがコツ。",
+        "エビングハウスの忘却曲線に打ち勝とう！",
+        "5分のリコールは、1時間の受動的な読書より効果的です。",
+        "「思い出そうとする時の負荷」が記憶を脳に定着させます。",
+        "少し忘れた頃に思い出すのが、最高のアクティブリコールです。",
+        "インプット3割、アウトプット7割。これが学習の黄金比。",
+        "完璧でなくてもOK。言葉を絞り出した数だけ定着します。",
+        "昨日の自分を超えるために、今日のリコールを始めましょう！",
+        "思い出す時に脳神経がつながります。頑張りどころです！"
+    ]
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // ヘッダーカード
-                    headerCard
-                        .opacity(appearAnimation ? 1 : 0)
-                        .offset(y: appearAnimation ? 0 : 15)
+            ZStack {
+                AppColors.background.ignoresSafeArea()
 
-                    // 統計カード
-                    statsSection
-                        .opacity(appearAnimation ? 1 : 0)
-                        .offset(y: appearAnimation ? 0 : 15)
+                // 背景クラゲアニメーション
+                JellyfishBackgroundView()
 
-                    // クイックスタート
-                    quickStartSection
-                        .opacity(appearAnimation ? 1 : 0)
-                        .offset(y: appearAnimation ? 0 : 15)
-
-                    // 最近の教材
-                    if !recentMaterials.isEmpty {
-                        recentSection
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // ヘッダーカード
+                        headerCard
                             .opacity(appearAnimation ? 1 : 0)
                             .offset(y: appearAnimation ? 0 : 15)
+
+                        // 統計カード
+                        statsSection
+                            .opacity(appearAnimation ? 1 : 0)
+                            .offset(y: appearAnimation ? 0 : 15)
+
+                        // クイックスタート
+                        quickStartSection
+                            .opacity(appearAnimation ? 1 : 0)
+                            .offset(y: appearAnimation ? 0 : 15)
+
+                        // 最近の教材
+                        if !recentMaterials.isEmpty {
+                            recentSection
+                                .opacity(appearAnimation ? 1 : 0)
+                                .offset(y: appearAnimation ? 0 : 15)
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 100)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 8)
-                .padding(.bottom, 32)
             }
-            .background(AppColors.background)
             .navigationTitle("")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -62,12 +214,31 @@ struct HomeView: View {
                         .font(.system(size: 26, weight: .bold))
                         .foregroundColor(AppColors.textPrimary)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: SettingsView()) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
             }
             .sheet(isPresented: $showNewMaterial) {
                 InputRegistrationView()
             }
+            .sheet(isPresented: $appRouter.showLibrarySheet) {
+                MaterialLibraryView(isPresentedAsSheet: true)
+            }
+            .sheet(item: $selectedRecallMaterial) { material in
+                NavigationStack {
+                    RecallSessionView(material: material)
+                }
+            }
+            .id(appRouter.homeResetID)
             .onAppear {
-                withAnimation(.easeOut(duration: 0.6)) {
+                if dailyTip.isEmpty {
+                    dailyTip = studyTips.randomElement() ?? studyTips[0]
+                }
+                withAnimation(.easeOut(duration: 0.8)) {
                     appearAnimation = true
                 }
             }
@@ -76,26 +247,32 @@ struct HomeView: View {
 
     // MARK: - Header Card
     private var headerCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(greetingText)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(AppColors.textSecondary)
-                    Text("今日の学習を\n始めましょう")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(AppColors.textPrimary)
-                        .lineSpacing(4)
-                }
-                Spacer()
-                ZStack {
-                    Circle()
-                        .fill(AppColors.primary.opacity(0.1))
-                        .frame(width: 64, height: 64)
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 28))
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 6) {
+                    Image(systemName: "quote.opening")
+                        .font(.system(size: 14, weight: .heavy))
+                        .foregroundColor(AppColors.primary.opacity(0.6))
+                    Text("TIP OF THE DAY")
+                        .font(.system(size: 12, weight: .bold))
                         .foregroundColor(AppColors.primary)
+                        .tracking(1.2)
                 }
+                
+                Text(dailyTip)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(AppColors.textPrimary)
+                    .lineSpacing(6)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 16)
+            ZStack {
+                Circle()
+                    .fill(AppColors.primary.opacity(0.1))
+                    .frame(width: 56, height: 56)
+                Image(systemName: "lightbulb.fill")
+                    .font(.system(size: 24))
+                    .foregroundColor(AppColors.primary)
             }
         }
         .softCard()
@@ -150,10 +327,40 @@ struct HomeView: View {
                             .foregroundColor(AppColors.secondary)
                     }
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("新しい教材を登録")
+                        Text("新しい教材を登録して学習")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(AppColors.textPrimary)
-                        Text("写真を撮って学習教材を追加")
+                        Text("写真や動画から教材を登録して学習")
+                            .font(.system(size: 13))
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(AppColors.textSecondary)
+                }
+            }
+            .softCard()
+
+            Button {
+                let generator = UIImpactFeedbackGenerator(style: .light)
+                generator.impactOccurred()
+                appRouter.showLibrarySheet = true
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.primary.opacity(0.15))
+                            .frame(width: 48, height: 48)
+                        Image(systemName: "books.vertical.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(AppColors.primary)
+                    }
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("登録済みの教材を選択して学習")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppColors.textPrimary)
+                        Text("ライブラリから教材を選んで復習")
                             .font(.system(size: 13))
                             .foregroundColor(AppColors.textSecondary)
                     }
@@ -166,8 +373,8 @@ struct HomeView: View {
             .softCard()
 
             if let randomMaterial = materials.randomElement() {
-                NavigationLink {
-                    RecallSessionView(material: randomMaterial)
+                Button {
+                    selectedRecallMaterial = randomMaterial
                 } label: {
                     HStack(spacing: 14) {
                         ZStack {
@@ -206,8 +413,8 @@ struct HomeView: View {
                 .foregroundColor(AppColors.textPrimary)
 
             ForEach(recentMaterials) { material in
-                NavigationLink {
-                    RecallSessionView(material: material)
+                Button {
+                    selectedRecallMaterial = material
                 } label: {
                     MaterialRow(material: material)
                 }
@@ -215,15 +422,6 @@ struct HomeView: View {
         }
     }
 
-    private var greetingText: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 5..<12: return "おはようございます ☀️"
-        case 12..<17: return "こんにちは 🌤"
-        case 17..<21: return "こんばんは 🌙"
-        default: return "お疲れさまです 🌟"
-        }
-    }
 }
 
 // MARK: - Stat Card Component
@@ -284,8 +482,8 @@ struct MaterialRow: View {
                         .font(.system(size: 12))
                         .foregroundColor(AppColors.textSecondary)
 
-                    if let score = material.averageScore {
-                        Text("平均 \(score)点")
+                    if let score = material.highestScore {
+                        Text("最高 \(score)点")
                             .font(.system(size: 12))
                             .foregroundColor(AppColors.secondary)
                     }

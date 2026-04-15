@@ -44,13 +44,18 @@ class APIService {
         return try JSONDecoder().decode(InputAnalysisResponse.self, from: data)
     }
 
+    // MARK: - ハイライトセグメント
+    struct HighlightedSegment: Codable {
+        let text: String
+        let recalled: Bool
+    }
+
     // MARK: - 想起採点
     struct RecallScoringResponse: Codable {
         let logicScore: Int
         let termScore: Int
         let logicFeedback: String
-        let missingKeywords: [String]
-        let missingConcepts: [String]
+        let highlightedSegments: [HighlightedSegment]
     }
 
     func scoreRecall(sourceText: String, recallText: String) async throws -> RecallScoringResponse {

@@ -16,12 +16,15 @@ from google import genai
 from google.genai.errors import APIError
 from pydantic import BaseModel
 import asyncio
+from openai import AsyncOpenAI
 
 # .env 読み込み
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
@@ -31,6 +34,9 @@ if not GEMINI_API_KEY or GEMINI_API_KEY == "your_gemini_api_key_here":
 
 # Gemini クライアント初期化
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+# OpenAI クライアント初期化
+openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # FastAPI アプリ
 app = FastAPI(
@@ -75,8 +81,7 @@ class ScoreResponse(BaseModel):
     logicScore: int
     termScore: int
     logicFeedback: str
-    missingKeywords: list[str]
-    missingConcepts: list[str]
+    highlightedSegments: list[dict]
 
 
 # ============================================================
@@ -175,23 +180,32 @@ SCORE_PROMPT_TEMPLATE = """あなたは学習効果の評価専門家です。
 【ユーザーの想起テキスト】
 {recall_text}
 
-以下の2つの観点で0〜100点の整数で採点し、JSON形式で回答してください（JSONのみ出力）:
+以下の観点で採点し、JSON形式で回答してください（JSONのみ出力）:
 
-1. logicScore（論理スコア）: 内容の論理構造・流れ・因果関係をどれだけ正確に再現できているか
-2. termScore（用語スコア）: 専門用語・キーワード・固有名詞をどれだけ正確に記憶できているか
+1. logicScore（論理スコア）: 内容の論理構造・流れ・因果関係をどれだけ正確に再現できているか (0〜100)
+2. termScore（用語スコア）: 専門用語・キーワード・固有名詞をどれだけ正確に記憶できているか (0〜100)
+3. logicFeedback: 全体的なフィードバック。できている点と今後の課題を100文字程度で、要点を絞って簡潔に記述。
+4. highlightedSegments: 元のテキストを意味のある短いフレーズ・文節単位で分割し、それぞれがユーザーの想起テキストでカバーされているかを判定した配列。
 
-また、学習の穴を詳細に埋めるために以下も含めてください:
-- logicFeedback: 全体的なフィードバック。できている点と今後の課題を200文字程度で、励ましを含めて記述。
-- missingKeywords: 元のテキストには含まれているが、ユーザーの想起テキストには含まれていない「実際の重要なキーワードや専門用語」（最大5つ）。
-- missingConcepts: ユーザーが言及できていない、あるいは浅い理解になっている「重要な概念・因果関係・論旨」。何がどう不足していたのか、元のテキストの内容を踏まえて具体的に詳細な文で記述してください（最大5つ）。
+highlightedSegmentsのルール:
+- 元のテキスト全体を、連続するセグメントに分割する（テキストが途切れないこと）
+- 各セグメントは意味的なまとまり（単語〜短い文程度）にする
+- 改行文字もセグメントとして含めること（"\\n"）
+- ユーザーがそのセグメントの内容を想起できていれば "recalled": true、できていなければ "recalled": false
+- 完全一致でなくても、意味的に同じ内容を書けていればrecalled: trueとする
+- すべてのセグメントを連結すると元のテキストと完全一致すること
 
 出力形式:
 {{
     "logicScore": 75,
     "termScore": 60,
     "logicFeedback": "フィードバック文...",
-    "missingKeywords": ["実際に書き漏らしたキーワード1", "実際に書き漏らしたキーワード2"],
-    "missingConcepts": ["〜という概念について、具体的な〇〇の理由や因果関係の説明が決定的に不足していました。", "〜の仕組みについて、本来言及すべき〇〇のプロセスが完全に抜け落ちています。"]
+    "highlightedSegments": [
+        {{"text": "セグメント1のテキスト", "recalled": true}},
+        {{"text": "セグメント2のテキスト", "recalled": false}},
+        {{"text": "\\n", "recalled": true}},
+        {{"text": "セグメント3のテキスト", "recalled": true}}
+    ]
 }}
 """
 
@@ -210,33 +224,58 @@ async def score_recall(req: ScoreRequest):
             recall_text=req.recallText,
         )
 
-        response_text = await _generate_with_retry(
-            model_name=GEMINI_MODEL,
-            contents=prompt,
+        # OpenAIを使用して採点
+        response = await openai_client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {"role": "system", "content": "あなたは学習効果の評価専門家です。指定されたJSONフォーマットでのみ出力してください。"},
+                {"role": "user", "content": prompt}
+            ],
+            response_format={ "type": "json_object" }
         )
 
+        response_text = response.choices[0].message.content
         raw = response_text.strip()
         parsed = _extract_json(raw)
+
+        # highlightedSegments のバリデーション
+        segments = parsed.get("highlightedSegments", [])
+        validated_segments = []
+        for seg in segments:
+            if isinstance(seg, dict) and "text" in seg and "recalled" in seg:
+                validated_segments.append({
+                    "text": str(seg["text"]),
+                    "recalled": bool(seg["recalled"])
+                })
+
+        # セグメントが空の場合、元テキスト全体を未リコールとしてフォールバック
+        if not validated_segments:
+            validated_segments = [{"text": req.sourceText, "recalled": False}]
 
         return ScoreResponse(
             logicScore=_clamp(parsed.get("logicScore", 50), 0, 100),
             termScore=_clamp(parsed.get("termScore", 50), 0, 100),
             logicFeedback=parsed.get("logicFeedback", "採点結果を取得できませんでした。"),
-            missingKeywords=parsed.get("missingKeywords", [])[:5],
-            missingConcepts=parsed.get("missingConcepts", [])[:3],
+            highlightedSegments=validated_segments,
         )
 
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="AI応答のJSON解析に失敗しました")
     except Exception as e:
         error_str = str(e)
-        if "429" in error_str or "UNAVAILABLE" in error_str or "EXHAUSTED" in error_str:
+        if "429" in error_str or "UNAVAILABLE" in error_str or "EXHAUSTED" in error_str or "Rate limit" in error_str:
             return ScoreResponse(
                 logicScore=0,
                 termScore=0,
-                logicFeedback="【API利用上限・高負荷エラー】現在、AIの利用枠（リクエスト数/日、または分間API制限）を超過しているか、サーバーが高負荷です。時間を置いてからお試しください。",
-                missingKeywords=["API制限", "レートリミット超過"],
-                missingConcepts=["時間が経過するまで採点AIは利用できません。しばらく（数分〜翌日）待ってから再試行してください。"]
+                logicFeedback="【API利用上限・高負荷エラー】現在、AIの利用枠を超過しているか、サーバーが高負荷です。時間を置いてからお試しください。",
+                highlightedSegments=[{"text": req.sourceText, "recalled": False}],
+            )
+        if "api_key" in error_str.lower():
+            return ScoreResponse(
+                logicScore=0,
+                termScore=0,
+                logicFeedback="【設定エラー】OPENAI_API_KEYが設定されていないか無効です。.envファイルを確認してください。",
+                highlightedSegments=[{"text": req.sourceText, "recalled": False}],
             )
         raise HTTPException(status_code=500, detail=f"採点エラー: {error_str}")
 

@@ -1,34 +1,34 @@
 import SwiftUI
 
-// MARK: - App Colors (要件定義 5.2 カラースキーム)
+// MARK: - App Colors (白基調の深海アクセント)
 struct AppColors {
-    /// ソフトデニム #64748B
-    static let primary = Color(hex: "64748B")
-    /// セージグリーン #869D7A
-    static let secondary = Color(hex: "869D7A")
+    /// 深海ブルー #0077B6 (メインカラー)
+    static let primary = Color(hex: "0077B6")
+    /// オーシャンティール #0A9396 (サブ要素・成功)
+    static let secondary = Color(hex: "0A9396")
     /// ミスティグリーン #A7C4BC
     static let success = Color(hex: "A7C4BC")
-    /// テラコッタ / サンド #E2A676
-    static let warning = Color(hex: "E2A676")
-    /// ウォームグレー #E5E7EB
+    /// 深海サンゴ（コーラル） #F4A261 (アクセント・警告)
+    static let warning = Color(hex: "F4A261")
+    /// ライトグレーの境界線 #E5E7EB
     static let border = Color(hex: "E5E7EB")
-    /// アイボリー #F9F8F6
+    /// アイボリー（一番深い底）#F9F8F6
     static let background = Color(hex: "F9F8F6")
     /// カード面 #FFFFFF
     static let surface = Color.white
-    /// テキストメイン #334155
-    static let textPrimary = Color(hex: "334155")
-    /// テキストサブ #94A3B8
-    static let textSecondary = Color(hex: "94A3B8")
-    /// テキスト反転
+    /// テキストメイン（ダークネイビー・見やすい色）#1B2A47
+    static let textPrimary = Color(hex: "1B2A47")
+    /// テキストサブ（スレート）#64748B
+    static let textSecondary = Color(hex: "64748B")
+    /// テキスト反転（暗い文字）
     static let textOnPrimary = Color.white
 
     static func scoreColor(_ level: StudyLog.ScoreLevel) -> Color {
         switch level {
         case .excellent: return success
-        case .good: return secondary
+        case .good: return primary
         case .fair: return warning
-        case .needsWork: return primary
+        case .needsWork: return secondary
         }
     }
 }
@@ -95,7 +95,7 @@ struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 16, weight: .bold))
-            .foregroundColor(.white)
+            .foregroundColor(AppColors.textOnPrimary)
             .padding(.horizontal, 28)
             .padding(.vertical, 16)
             .frame(maxWidth: .infinity)

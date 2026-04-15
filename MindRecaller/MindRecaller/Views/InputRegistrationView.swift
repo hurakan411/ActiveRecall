@@ -6,11 +6,14 @@ import PhotosUI
 struct InputRegistrationView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query private var materials: [Material]
 
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var title = ""
     @State private var sourceText = ""
+    @State private var tags: [String] = []
+    @State private var newTag = ""
     @State private var isAnalyzing = false
     @State private var showCamera = false
     @State private var inputMode: InputMode = .selection
@@ -19,6 +22,11 @@ struct InputRegistrationView: View {
     enum InputMode {
         case selection
         case editor
+    }
+
+    private var allTags: [String] {
+        let all = materials.flatMap { $0.tags }
+        return Array(Set(all)).sorted()
     }
 
     var body: some View {
@@ -245,6 +253,92 @@ struct InputRegistrationView: View {
                         )
                 }
 
+                // タグ
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("タグ (最大3つまで)")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(AppColors.textSecondary)
+                    
+                    HStack {
+                        TextField("タグを入力", text: $newTag)
+                            .font(.system(size: 16))
+                            .foregroundColor(AppColors.textPrimary)
+                            .padding(14)
+                            .background(AppColors.surface)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(AppColors.border, lineWidth: 1)
+                            )
+                            .onSubmit { addTag() }
+                        
+                        Button(action: { addTag() }) {
+                            Text("追加")
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                                .background(tags.count >= 3 || newTag.trimmingCharacters(in: .whitespaces).isEmpty ? AppColors.secondary.opacity(0.5) : AppColors.secondary)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(tags.count >= 3 || newTag.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                    
+                    if !tags.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(tags, id: \.self) { tag in
+                                    HStack(spacing: 4) {
+                                        Text(tag)
+                                            .font(.system(size: 13, weight: .medium))
+                                        Button(action: { tags.removeAll { $0 == tag } }) {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(AppColors.primary)
+                                        }
+                                    }
+                                    .foregroundColor(AppColors.primary)
+                                    .padding(.horizontal, 12).padding(.vertical, 6)
+                                    .background(AppColors.primary.opacity(0.1))
+                                    .clipShape(Capsule())
+                                }
+                            }
+                        }
+                    }
+                    
+                    let availableTags = allTags.filter { !tags.contains($0) }
+                    if tags.count < 3 {
+                        Menu {
+                            if availableTags.isEmpty {
+                                Button("追加できる既存タグがありません") {}
+                                    .disabled(true)
+                            } else {
+                                ForEach(availableTags, id: \.self) { tag in
+                                    Button(tag) {
+                                        if tags.count < 3 {
+                                            tags.append(tag)
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "tag.fill")
+                                Text("既存のタグから追加")
+                                Spacer()
+                                Image(systemName: "chevron.down")
+                            }
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(availableTags.isEmpty ? AppColors.secondary.opacity(0.5) : AppColors.secondary)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .background(AppColors.secondary.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                        .disabled(availableTags.isEmpty)
+                    }
+                }
+
                 if let error = errorMessage {
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
@@ -316,7 +410,8 @@ struct InputRegistrationView: View {
     private func saveMaterial() {
         let material = Material(
             title: title,
-            sourceText: sourceText
+            sourceText: sourceText,
+            tags: tags
         )
         modelContext.insert(material)
 
@@ -324,6 +419,14 @@ struct InputRegistrationView: View {
         generator.notificationOccurred(.success)
 
         dismiss()
+    }
+
+    private func addTag() {
+        let trimmed = newTag.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty && tags.count < 3 && !tags.contains(trimmed) {
+            tags.append(trimmed)
+            newTag = ""
+        }
     }
 }
 
