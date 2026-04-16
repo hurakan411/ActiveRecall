@@ -23,11 +23,13 @@
 		A1000001000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000C /* Assets.xcassets */; };
 		A1000001000000000000000D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000D /* Preview Assets.xcassets */; };
 		A1000001000000000000000F /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001000000000000000F /* AppEnvironment.swift */; };
+		D8001AA6B6BA632959E71BE1 /* Seaweed.lottie in Resources */ = {isa = PBXBuildFile; fileRef = 07A828BD50228D0B7FE82D69 /* Seaweed.lottie */; };
 		F321D433B6E79494FBADE6AE /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F1BDAA7AB0E5E127F08852 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		02D3DD622F8E7DED00434C67 /* Jellyfish.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = Jellyfish.lottie; sourceTree = "<group>"; };
+		07A828BD50228D0B7FE82D69 /* Seaweed.lottie */ = {isa = PBXFileReference; includeInIndex = 1; path = Seaweed.lottie; sourceTree = "<group>"; };
 		75F1BDAA7AB0E5E127F08852 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A20000010000000000000001 /* MindRecallerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MindRecallerApp.swift; sourceTree = "<group>"; };
 		A20000010000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -60,6 +62,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		02D3DD642F8E7DED00434C67 /* Assets */ = {
+			isa = PBXGroup;
+			children = (
+				02D3DD622F8E7DED00434C67 /* Jellyfish.lottie */,
+				07A828BD50228D0B7FE82D69 /* Seaweed.lottie */,
+			);
+			path = Assets;
+			sourceTree = "<group>";
+		};
 		A40000010000000000000001 = {
 			isa = PBXGroup;
 			children = (
@@ -83,14 +94,6 @@
 				A40000010000000000000006 /* Preview Content */,
 			);
 			path = MindRecaller;
-			sourceTree = "<group>";
-		};
-		02D3DD642F8E7DED00434C67 /* Assets */ = {
-			isa = PBXGroup;
-			children = (
-				02D3DD622F8E7DED00434C67 /* Jellyfish.lottie */,
-			);
-			path = Assets;
 			sourceTree = "<group>";
 		};
 		A40000010000000000000003 /* Models */ = {
@@ -206,6 +209,7 @@
 				A1000001000000000000000D /* Preview Assets.xcassets in Resources */,
 				A1000001000000000000000C /* Assets.xcassets in Resources */,
 				02D3DD632F8E7DED00434C67 /* Jellyfish.lottie in Resources */,
+				D8001AA6B6BA632959E71BE1 /* Seaweed.lottie in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,6 +299,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"MindRecaller/Preview Content\"";
+				DEVELOPMENT_TEAM = 9927M765H2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MindRecaller/Info.plist;
@@ -327,6 +332,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"MindRecaller/Preview Content\"";
+				DEVELOPMENT_TEAM = 9927M765H2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MindRecaller/Info.plist;

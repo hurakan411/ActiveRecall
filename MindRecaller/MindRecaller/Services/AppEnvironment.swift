@@ -4,22 +4,17 @@ import Foundation
 /// Info.plist 経由（xcconfig）とフォールバックの .env ファイル直読みの両方に対応
 enum AppEnvironment {
 
+    // 開発環境と本番環境の切り替え用フラグ
+    static let useRenderBackend = true
+    
+    // ⚠️ここにRenderから発行された自分のアプリのURLを貼り付けてください！
+    // 例: "https://mindrecaller-backend.onrender.com"
+    static let renderApiBaseURL = "https://activerecall.onrender.com" // ←※このURLは仮ですので、ご自身のURLに変更してください
+    static let localApiBaseURL = "http://localhost:8000"
+
     /// API ベース URL
     static var apiBaseURL: String {
-        // バンドル内の .env ファイルから読み込みフォールバック
-        if let envURL = Bundle.main.url(forResource: ".env", withExtension: nil),
-           let content = try? String(contentsOf: envURL, encoding: .utf8) {
-            let values = parseEnv(content)
-            
-            let useRender = (values["USE_RENDER_BACKEND"]?.lowercased() == "true")
-            let localUrl = values["LOCAL_API_BASE_URL"] ?? "http://localhost:8000"
-            let renderUrl = values["RENDER_API_BASE_URL"] ?? "https://your-render-app.onrender.com"
-            
-            return useRender ? renderUrl : localUrl
-        }
-
-        // デフォルト（ローカル開発用）
-        return "http://localhost:8000"
+        return useRenderBackend ? renderApiBaseURL : localApiBaseURL
     }
 
     /// .env ファイルのパース

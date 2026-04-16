@@ -140,6 +140,10 @@ struct HomeView: View {
     @State private var appearAnimation = false
     @State private var dailyTip: String = ""
     @State private var selectedRecallMaterial: Material?
+    
+    // オンボーディング
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var onboardingStep = 1
 
     private var todayStudyCount: Int {
         let calendar = Calendar.current
@@ -184,16 +188,19 @@ struct HomeView: View {
                         headerCard
                             .opacity(appearAnimation ? 1 : 0)
                             .offset(y: appearAnimation ? 0 : 15)
+                            .anchorPreference(key: OnboardingAnchorKey.self, value: .bounds, transform: { [1: $0] })
 
                         // 統計カード
                         statsSection
                             .opacity(appearAnimation ? 1 : 0)
                             .offset(y: appearAnimation ? 0 : 15)
+                            .anchorPreference(key: OnboardingAnchorKey.self, value: .bounds, transform: { [2: $0] })
 
                         // クイックスタート
                         quickStartSection
                             .opacity(appearAnimation ? 1 : 0)
                             .offset(y: appearAnimation ? 0 : 15)
+                            .anchorPreference(key: OnboardingAnchorKey.self, value: .bounds, transform: { [3: $0] })
 
                         // 最近の教材
                         if !recentMaterials.isEmpty {
@@ -223,7 +230,11 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showNewMaterial) {
-                InputRegistrationView()
+                InputRegistrationView(onRegistered: { material in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.selectedRecallMaterial = material
+                    }
+                })
             }
             .sheet(isPresented: $appRouter.showLibrarySheet) {
                 MaterialLibraryView(isPresentedAsSheet: true)
@@ -241,6 +252,14 @@ struct HomeView: View {
                 withAnimation(.easeOut(duration: 0.8)) {
                     appearAnimation = true
                 }
+            }
+        }
+        .overlayPreferenceValue(OnboardingAnchorKey.self) { anchors in
+            if !hasCompletedOnboarding {
+                GeometryReader { geo in
+                    coachMarkOverlay(anchors: anchors, geo: geo)
+                }
+                .ignoresSafeArea()
             }
         }
     }
@@ -266,14 +285,12 @@ struct HomeView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 16)
-            ZStack {
-                Circle()
-                    .fill(AppColors.primary.opacity(0.1))
-                    .frame(width: 56, height: 56)
-                Image(systemName: "lightbulb.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(AppColors.primary)
+            LottieView {
+                try await DotLottieFile.named("Seaweed")
             }
+            .playing(loopMode: .loop)
+            .frame(width: 80, height: 80)
+            .offset(y: 16)
         }
         .softCard()
     }
@@ -503,4 +520,157 @@ struct MaterialRow: View {
 #Preview {
     HomeView()
         .modelContainer(for: [Material.self, StudyLog.self], inMemory: true)
+}
+
+// MARK: - Animatable Spotlight Shape
+struct SpotlightShape: Shape {
+    var holeX: CGFloat
+    var holeY: CGFloat
+    var holeWidth: CGFloat
+    var holeHeight: CGFloat
+    var cornerRadius: CGFloat = 16
+    
+    var animatableData: AnimatablePair<AnimatablePair<CGFloat, CGFloat>, AnimatablePair<CGFloat, CGFloat>> {
+        get { AnimatablePair(AnimatablePair(holeX, holeY), AnimatablePair(holeWidth, holeHeight)) }
+        set {
+            holeX = newValue.first.first
+            holeY = newValue.first.second
+            holeWidth = newValue.second.first
+            holeHeight = newValue.second.second
+        }
+    }
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.addRect(rect)
+        if holeWidth > 0 && holeHeight > 0 {
+            let hole = CGRect(
+                x: holeX - 6, y: holeY - 6,
+                width: holeWidth + 12, height: holeHeight + 12
+            )
+            path.addRoundedRect(in: hole, cornerSize: CGSize(width: cornerRadius, height: cornerRadius))
+        }
+        return path
+    }
+}
+
+// MARK: - Onboarding Overlay & Anchor
+struct OnboardingAnchorKey: PreferenceKey {
+    static var defaultValue: [Int: Anchor<CGRect>] = [:]
+    static func reduce(value: inout [Int: Anchor<CGRect>], nextValue: () -> [Int: Anchor<CGRect>]) {
+        value.merge(nextValue()) { _, new in new }
+    }
+}
+
+extension HomeView {
+    
+    private func advanceOnboarding() {
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        if onboardingStep < 3 {
+            onboardingStep += 1
+        } else {
+            hasCompletedOnboarding = true
+        }
+    }
+    
+    @ViewBuilder
+    func coachMarkOverlay(anchors: [Int: Anchor<CGRect>], geo: GeometryProxy) -> some View {
+        let rect = anchors[onboardingStep].map { geo[$0] } ?? .zero
+        let isAboveCenter = rect.midY < geo.size.height * 0.4
+        let tooltipY = isAboveCenter ? rect.maxY + 50 : rect.minY - 50
+        
+        ZStack {
+            // 1. スポットライト（くり抜き）
+            SpotlightShape(
+                holeX: rect.minX,
+                holeY: rect.minY,
+                holeWidth: rect.width,
+                holeHeight: rect.height
+            )
+            .fill(Color.black.opacity(0.65), style: FillStyle(eoFill: true))
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+            .animation(.easeInOut(duration: 0.3), value: onboardingStep)
+            
+            // 2. 白枠
+            if rect != .zero {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.9), lineWidth: 2.5)
+                    .frame(width: rect.width + 12, height: rect.height + 12)
+                    .position(x: rect.midX, y: rect.midY)
+                    .allowsHitTesting(false)
+                    .animation(.easeInOut(duration: 0.3), value: onboardingStep)
+            }
+            
+            // 3. 吹き出しメッセージ
+            if rect != .zero {
+                VStack(spacing: 4) {
+                    if !isAboveCenter {
+                        tooltipBubble(message: onboardingMessage(for: onboardingStep))
+                        
+                        Image(systemName: "arrowtriangle.down.fill")
+                            .foregroundColor(AppColors.surface)
+                            .font(.system(size: 16))
+                            .offset(y: -4)
+                    } else {
+                        Image(systemName: "arrowtriangle.up.fill")
+                            .foregroundColor(AppColors.surface)
+                            .font(.system(size: 16))
+                            .offset(y: 4)
+                        
+                        tooltipBubble(message: onboardingMessage(for: onboardingStep))
+                    }
+                }
+                .position(x: geo.size.width / 2, y: tooltipY)
+                .allowsHitTesting(false)
+                .animation(.easeInOut(duration: 0.3), value: onboardingStep)
+            }
+            
+            // 4. 全画面タップで次へ進む
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture { advanceOnboarding() }
+            
+            // 5. ステップ表示（上部ドット）
+            VStack {
+                HStack(spacing: 6) {
+                    ForEach(1...3, id: \.self) { i in
+                        Circle()
+                            .fill(i == onboardingStep ? Color.white : Color.white.opacity(0.3))
+                            .frame(width: 8, height: 8)
+                    }
+                }
+                .padding(.top, geo.safeAreaInsets.top + 20)
+                Spacer()
+            }
+            .allowsHitTesting(false)
+        }
+    }
+    
+    private func tooltipBubble(message: String) -> some View {
+        Text(message)
+            .font(.system(size: 15, weight: .bold))
+            .multilineTextAlignment(.center)
+            .foregroundColor(AppColors.textPrimary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(AppColors.surface)
+            .cornerRadius(12)
+            .shadow(color: .black.opacity(0.3), radius: 8)
+            .padding(.horizontal, 24)
+    }
+    
+    private func onboardingMessage(for step: Int) -> String {
+        switch step {
+        case 1:
+            return "学習に役立つヒントが毎日届きます。\nモチベーションを高めましょう！"
+        case 2:
+            return "学習の進捗がひと目でわかります。\n毎日のリコール回数を増やしましょう！"
+        case 3:
+            return "ここから教材の登録・アクティブリコールができます。\nマイク入力やカメラからAIで自動生成！"
+        default:
+            return ""
+        }
+    }
 }

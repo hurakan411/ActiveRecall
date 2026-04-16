@@ -18,11 +18,16 @@ struct InputRegistrationView: View {
     @State private var showCamera = false
     @State private var inputMode: InputMode = .selection
     @State private var errorMessage: String?
+    
+    var onRegistered: ((Material) -> Void)? = nil
 
     enum InputMode {
         case selection
         case editor
+        case voice
     }
+    
+    @State private var speechRecognizer = SpeechRecognizer()
 
     private var allTags: [String] {
         let all = materials.flatMap { $0.tags }
@@ -39,6 +44,8 @@ struct InputRegistrationView: View {
                     selectionView
                 case .editor:
                     editorView
+                case .voice:
+                    voiceView
                 }
 
                 if isAnalyzing {
@@ -184,12 +191,134 @@ struct InputRegistrationView: View {
                     }
                 }
                 .softCard()
+
+                // 音声入力
+                Button {
+                    let generator = UIImpactFeedbackGenerator(style: .light)
+                    generator.impactOccurred()
+                    speechRecognizer.checkPermission { granted in
+                        if granted {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                inputMode = .voice
+                            }
+                        } else {
+                            errorMessage = "マイクと音声認識のアクセスが許可されていません。設定から許可してください。"
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.purple.opacity(0.12))
+                                .frame(width: 44, height: 44)
+                            Image(systemName: "mic.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.purple)
+                        }
+                        Text("音声で入力")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppColors.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14))
+                            .foregroundColor(AppColors.textSecondary)
+                    }
+                }
+                .softCard()
             }
             .padding(.horizontal, 20)
 
             Spacer()
         }
         .padding(.horizontal, 20)
+    }
+
+    // MARK: - Voice Input View
+    private var voiceView: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            Text("音声でテキストを入力")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(AppColors.textPrimary)
+            
+            ZStack {
+                Circle()
+                    .fill(speechRecognizer.isRecording ? Color.red.opacity(0.2) : Color.purple.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                    .scaleEffect(speechRecognizer.isRecording ? 1.2 : 1.0)
+                    .animation(speechRecognizer.isRecording ? .easeInOut(duration: 1.0).repeatForever(autoreverses: true) : .default, value: speechRecognizer.isRecording)
+                
+                Image(systemName: speechRecognizer.isRecording ? "waveform" : "mic.fill")
+                    .font(.system(size: 50))
+                    .foregroundColor(speechRecognizer.isRecording ? .red : .purple)
+            }
+            .padding(.vertical, 20)
+            
+            ScrollView {
+                Text(speechRecognizer.transcript.isEmpty ? "マイクボタンを押して話し始めてください..." : speechRecognizer.transcript)
+                    .font(.system(size: 18))
+                    .foregroundColor(speechRecognizer.transcript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .padding()
+            }
+            .frame(maxHeight: 200)
+            .background(AppColors.surface)
+            .cornerRadius(16)
+            
+            Spacer()
+            
+            HStack(spacing: 20) {
+                Button(action: {
+                    if speechRecognizer.isRecording {
+                        speechRecognizer.stopRecording()
+                    } else {
+                        speechRecognizer.startRecording()
+                    }
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+                }) {
+                    Text(speechRecognizer.isRecording ? "停止" : "録音開始")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(speechRecognizer.isRecording ? Color.red : Color.purple)
+                        .cornerRadius(16)
+                }
+                
+                Button(action: {
+                    if speechRecognizer.isRecording {
+                        speechRecognizer.stopRecording()
+                    }
+                    sourceText = speechRecognizer.transcript
+                    // タイトルがない場合は最初の数文字をタイトルにする
+                    if title.isEmpty && !sourceText.isEmpty {
+                        title = String(sourceText.prefix(15)) + (sourceText.count > 15 ? "..." : "")
+                    }
+                    withAnimation {
+                        inputMode = .editor
+                    }
+                }) {
+                    Text("完了")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(AppColors.primary)
+                        .cornerRadius(16)
+                }
+                .disabled(speechRecognizer.transcript.isEmpty && !speechRecognizer.isRecording)
+                .opacity(speechRecognizer.transcript.isEmpty && !speechRecognizer.isRecording ? 0.5 : 1.0)
+            }
+            .padding(.bottom, 20)
+        }
+        .padding(.horizontal, 20)
+        .onDisappear {
+            if speechRecognizer.isRecording {
+                speechRecognizer.stopRecording()
+            }
+        }
     }
 
     // MARK: - Editor View (自動入力エディタ)
@@ -418,6 +547,7 @@ struct InputRegistrationView: View {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(.success)
 
+        onRegistered?(material)
         dismiss()
     }
 
@@ -470,4 +600,101 @@ struct CameraView: UIViewControllerRepresentable {
 #Preview {
     InputRegistrationView()
         .modelContainer(for: [Material.self, StudyLog.self], inMemory: true)
+}
+
+import AVFoundation
+import Speech
+
+@Observable
+class SpeechRecognizer {
+    var transcript: String = ""
+    var isRecording: Bool = false
+    var errorMessage: String? = nil
+    
+    private var audioEngine: AVAudioEngine?
+    private var request: SFSpeechAudioBufferRecognitionRequest?
+    private var task: SFSpeechRecognitionTask?
+    private var recognizer: SFSpeechRecognizer?
+    
+    init() {
+        recognizer = SFSpeechRecognizer(locale: Locale(identifier: "ja-JP"))
+    }
+    
+    func checkPermission(completion: @escaping (Bool) -> Void) {
+        SFSpeechRecognizer.requestAuthorization { status in
+            DispatchQueue.main.async {
+                switch status {
+                case .authorized:
+                    AVAudioSession.sharedInstance().requestRecordPermission { granted in
+                        DispatchQueue.main.async {
+                            completion(granted)
+                        }
+                    }
+                default:
+                    completion(false)
+                }
+            }
+        }
+    }
+    
+    func startRecording() {
+        guard !isRecording else { return }
+        
+        audioEngine = AVAudioEngine()
+        guard let audioEngine = audioEngine else { return }
+        
+        request = SFSpeechAudioBufferRecognitionRequest()
+        guard let request = request else { return }
+        request.shouldReportPartialResults = true
+        
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            self.errorMessage = "マイクの設定に失敗しました"
+            return
+        }
+        
+        let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+            self.request?.append(buffer)
+        }
+        
+        audioEngine.prepare()
+        do {
+            try audioEngine.start()
+            isRecording = true
+            errorMessage = nil
+            transcript = ""
+        } catch {
+            self.errorMessage = "録音の開始に失敗しました"
+            return
+        }
+        
+        task = recognizer?.recognitionTask(with: request) { result, error in
+            if let result = result {
+                self.transcript = result.bestTranscription.formattedString
+            }
+            if error != nil || (result?.isFinal ?? false) {
+                self.stopRecording()
+            }
+        }
+    }
+    
+    func stopRecording() {
+        guard isRecording else { return }
+        audioEngine?.stop()
+        audioEngine?.inputNode.removeTap(onBus: 0)
+        request?.endAudio()
+        task?.cancel()
+        
+        audioEngine = nil
+        request = nil
+        task = nil
+        
+        isRecording = false
+    }
 }
