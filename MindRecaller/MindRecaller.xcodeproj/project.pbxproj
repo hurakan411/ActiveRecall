@@ -303,7 +303,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MindRecaller/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = MindRecaller;
+				INFOPLIST_KEY_CFBundleDisplayName = "アクリコ";
+				INFOPLIST_KEY_CFBundleName = "アクリコ | AI Active Recall";
 				INFOPLIST_KEY_NSCameraUsageDescription = "教材の写真を撮影するためにカメラを使用します";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "教材の画像を選択するためにフォトライブラリを使用します";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -336,7 +337,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MindRecaller/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = MindRecaller;
+				INFOPLIST_KEY_CFBundleDisplayName = "アクリコ";
+				INFOPLIST_KEY_CFBundleName = "アクリコ | AI Active Recall";
 				INFOPLIST_KEY_NSCameraUsageDescription = "教材の写真を撮影するためにカメラを使用します";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "教材の画像を選択するためにフォトライブラリを使用します";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

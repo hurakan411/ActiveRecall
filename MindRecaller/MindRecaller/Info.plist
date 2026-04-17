@@ -4,6 +4,10 @@
 <dict>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
+	<key>CFBundleDisplayName</key>
+	<string>アクリコ</string>
+	<key>CFBundleName</key>
+	<string>アクリコ | AI Active Recall</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

@@ -14,3 +14,4 @@ DerivedData/
 
 # OS
 .DS_Store
+venv/

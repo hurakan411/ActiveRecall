@@ -17,17 +17,19 @@ class AppRouter: ObservableObject {
     @Published var libraryResetID = UUID()
     @Published var selectedTab: TabSelection = .home
     @Published var showLibrarySheet = false
+    @Published var selectedRecallMaterial: Material?
     
     func resetToHome() {
         showLibrarySheet = false
+        selectedRecallMaterial = nil
         selectedTab = .home
         
-        // SwiftUIのUI更新サイクルと競合してIDリセットが無視されるのを防ぐため、
-        // 少しだけ遅延させてからIDを更新し、確実にNavigationStackを再構築させる
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            self.homeResetID = UUID()
-            self.libraryResetID = UUID()
-        }
+        // SwiftUIのUI更新サイクルと競合してIDリセットが無視されるのを防ぐため遅延更新していたが、
+        // 画面が3秒間真っ白になる原因だったため、UUIDリセットによるツリー再構築を無効化
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        //     self.homeResetID = UUID()
+        //     self.libraryResetID = UUID()
+        // }
     }
 }
 

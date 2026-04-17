@@ -139,7 +139,6 @@ struct HomeView: View {
     @State private var showNewMaterial = false
     @State private var appearAnimation = false
     @State private var dailyTip: String = ""
-    @State private var selectedRecallMaterial: Material?
     
     // オンボーディング
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -217,8 +216,8 @@ struct HomeView: View {
             .navigationTitle("")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Text("MindRecaller")
-                        .font(.system(size: 26, weight: .bold))
+                    Text("アクリコ | AI Active Recall")
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundColor(AppColors.textPrimary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -232,14 +231,14 @@ struct HomeView: View {
             .sheet(isPresented: $showNewMaterial) {
                 InputRegistrationView(onRegistered: { material in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        self.selectedRecallMaterial = material
+                        self.appRouter.selectedRecallMaterial = material
                     }
                 })
             }
             .sheet(isPresented: $appRouter.showLibrarySheet) {
                 MaterialLibraryView(isPresentedAsSheet: true)
             }
-            .sheet(item: $selectedRecallMaterial) { material in
+            .sheet(item: $appRouter.selectedRecallMaterial) { material in
                 NavigationStack {
                     RecallSessionView(material: material)
                 }
@@ -266,7 +265,7 @@ struct HomeView: View {
 
     // MARK: - Header Card
     private var headerCard: some View {
-        HStack(alignment: .top, spacing: 16) {
+        ZStack(alignment: .bottomTrailing) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 6) {
                     Image(systemName: "quote.opening")
@@ -284,13 +283,15 @@ struct HomeView: View {
                     .lineSpacing(6)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 16)
+            .padding(.trailing, 50) // かぶっていいので余白を詰める (1文字分約20pt戻して被りを軽減)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
             LottieView {
                 try await DotLottieFile.named("Seaweed")
             }
             .playing(loopMode: .loop)
             .frame(width: 80, height: 80)
-            .offset(y: 16)
+            .offset(x: 10, y: 16) // はみ出すように右下に寄せる
         }
         .softCard()
     }
@@ -391,7 +392,7 @@ struct HomeView: View {
 
             if let randomMaterial = materials.randomElement() {
                 Button {
-                    selectedRecallMaterial = randomMaterial
+                    appRouter.selectedRecallMaterial = randomMaterial
                 } label: {
                     HStack(spacing: 14) {
                         ZStack {
@@ -431,7 +432,7 @@ struct HomeView: View {
 
             ForEach(recentMaterials) { material in
                 Button {
-                    selectedRecallMaterial = material
+                    appRouter.selectedRecallMaterial = material
                 } label: {
                     MaterialRow(material: material)
                 }
