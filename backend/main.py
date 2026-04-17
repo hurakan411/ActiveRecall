@@ -24,7 +24,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
@@ -182,8 +182,8 @@ SCORE_PROMPT_TEMPLATE = """あなたは学習効果の評価専門家です。
 
 以下の観点で採点し、JSON形式で回答してください（JSONのみ出力）:
 
-1. logicScore（論理スコア）: 内容の論理構造・流れ・因果関係をどれだけ正確に再現できているか (0〜100)
-2. termScore（用語スコア）: 専門用語・キーワード・固有名詞をどれだけ正確に記憶できているか (0〜100)
+1. logicScore（論理スコア）: 全体の論理構造・流れ・因果関係のうち、どれくらい正確に要素を網羅できているかを示す到達度 (0〜100)。一部分しか書かれていない場合は、カバーできている論理の割合に比例したスコアにしてください。
+2. termScore（用語スコア）: 全キーワードのうち、いくつ拾えているかを示す到達度 (0〜100)。元のテキスト中の重要な専門用語・キーワード・固有名詞をすべて抽出し、そのうちユーザーが言及できた数の割合をそのままスコアとしてください。
 3. logicFeedback: 全体的なフィードバック。できている点と今後の課題を100文字程度で、要点を絞って簡潔に記述。
 4. highlightedSegments: 元のテキストを意味のある短いフレーズ・文節単位で分割し、それぞれがユーザーの想起テキストでカバーされているかを判定した配列。
 
