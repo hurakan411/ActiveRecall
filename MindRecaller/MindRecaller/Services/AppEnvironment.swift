@@ -5,12 +5,12 @@ import Foundation
 enum AppEnvironment {
 
     // 開発環境と本番環境の切り替え用フラグ
-    static let useRenderBackend = true
+    static let useRenderBackend = false
     
     // ⚠️ここにRenderから発行された自分のアプリのURLを貼り付けてください！
     // 例: "https://mindrecaller-backend.onrender.com"
     static let renderApiBaseURL = "https://activerecall.onrender.com" // ←※このURLは仮ですので、ご自身のURLに変更してください
-    static let localApiBaseURL = "http://localhost:8000"
+    static let localApiBaseURL = "http://127.0.0.1:8000"
 
     /// API ベース URL
     static var apiBaseURL: String {
