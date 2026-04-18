@@ -1,13 +1,18 @@
 import SwiftUI
 import SwiftData
+import StoreKit
 
 // MARK: - 画面5: 解析結果画面
 struct AnalysisResultView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.requestReview) private var requestReview
     @EnvironmentObject var appRouter: AppRouter
     let studyLog: StudyLog
     let material: Material
     @State private var appear = false
+
+    /// レビュー催促対象のリコール回数
+    private static let reviewMilestones: Set<Int> = [1, 5, 10]
 
     var body: some View {
         ScrollView {
@@ -37,7 +42,7 @@ struct AnalysisResultView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: {
+                Button { requestReviewIfNeeded(); dismiss() } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(AppColors.textSecondary)
@@ -194,6 +199,7 @@ struct AnalysisResultView: View {
             }
             .buttonStyle(PrimaryButtonStyle())
             Button { 
+                requestReviewIfNeeded()
                 appRouter.resetToHome()
             } label: {
                 Text("ホームに戻る")
@@ -202,6 +208,23 @@ struct AnalysisResultView: View {
                     .frame(maxWidth: .infinity, alignment: .center)
             }
             .padding(.top, 4)
+        }
+    }
+
+    // MARK: - In-App Review
+    /// リコール回数がマイルストーンに達していたらレビューを催促する
+    private func requestReviewIfNeeded() {
+        let totalRecalls = UserDefaults.standard.integer(forKey: "totalRecallCount")
+        if Self.reviewMilestones.contains(totalRecalls) {
+            // 同じマイルストーンで重複しないよう記録
+            let key = "reviewRequested_\(totalRecalls)"
+            guard !UserDefaults.standard.bool(forKey: key) else { return }
+            UserDefaults.standard.set(true, forKey: key)
+            
+            // 少し遅延させてシートが閉じる前にポップアップが出るようにする
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                requestReview()
+            }
         }
     }
 }

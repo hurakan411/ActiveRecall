@@ -289,7 +289,13 @@ struct RecallSessionView: View {
             do {
                 let r = try await APIService.shared.scoreRecall(sourceText: material.sourceText, recallText: recallText)
                 let log = StudyLog(material: material, logicScore: r.logicScore, termScore: r.termScore, recallText: recallText, logicFeedback: r.logicFeedback, highlightedSegments: r.highlightedSegments)
-                await MainActor.run { modelContext.insert(log); resultLog = log; isSubmitting = false; UINotificationFeedbackGenerator().notificationOccurred(.success); showResult = true }
+                await MainActor.run {
+                    modelContext.insert(log)
+                    // リコール回数をインクリメント（レビュー催促のマイルストーン判定に使用）
+                    let currentCount = UserDefaults.standard.integer(forKey: "totalRecallCount")
+                    UserDefaults.standard.set(currentCount + 1, forKey: "totalRecallCount")
+                    resultLog = log; isSubmitting = false; UINotificationFeedbackGenerator().notificationOccurred(.success); showResult = true
+                }
             } catch {
                 await MainActor.run { 
                     isSubmitting = false

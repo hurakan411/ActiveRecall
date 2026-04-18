@@ -5,7 +5,7 @@ import Foundation
 enum AppEnvironment {
 
     // 開発環境と本番環境の切り替え用フラグ
-    static let useRenderBackend = false
+    static let useRenderBackend = true
     
     // ⚠️ここにRenderから発行された自分のアプリのURLを貼り付けてください！
     // 例: "https://mindrecaller-backend.onrender.com"

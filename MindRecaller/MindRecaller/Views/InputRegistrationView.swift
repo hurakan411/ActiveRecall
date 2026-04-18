@@ -109,7 +109,7 @@ struct InputRegistrationView: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(AppColors.textPrimary)
 
-            Text("写真から自動でテキストを抽出し、\n学習教材として登録します")
+            Text("お好みの方法でテキストを入力し、\n学習教材として登録します")
                 .font(.system(size: 14))
                 .foregroundColor(AppColors.textSecondary)
                 .multilineTextAlignment(.center)

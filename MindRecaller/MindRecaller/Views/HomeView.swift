@@ -72,52 +72,6 @@ struct FloatingJellyfishView: View {
 struct JellyfishBackgroundView: View {
     let particles: [JellyfishParticle]
 
-    init() {
-        // サイズのバリエーション: 各カテゴリから最低1匹ずつ出す
-        let sizePresets: [ClosedRange<CGFloat>] = [
-            40...55,    // 小さいクラゲ
-            65...85,    // 中くらいのクラゲ
-            95...120,   // 大きいクラゲ
-            130...160,  // とても大きいクラゲ
-        ]
-        var generated: [JellyfishParticle] = []
-
-        // まず各サイズカテゴリから1匹ずつ確保
-        for (i, range) in sizePresets.enumerated() {
-            let size = CGFloat.random(in: range)
-            let duration = Double(size) / 5.0 + Double.random(in: 8...14)
-            generated.append(
-                JellyfishParticle(
-                    xRatio: CGFloat.random(in: 0.05...0.95),
-                    size: size,
-                    duration: duration,
-                    delay: Double(i) * Double.random(in: 1.5...3.0),
-                    opacity: Double.random(in: 0.4...0.7),
-                    animationSpeed: Double.random(in: 0.35...0.65),
-                    horizontalSway: CGFloat.random(in: 5...16)
-                )
-            )
-        }
-        // 追加で2匹ランダムサイズ
-        for i in 4..<6 {
-            let range = sizePresets[Int.random(in: 0..<sizePresets.count)]
-            let size = CGFloat.random(in: range)
-            let duration = Double(size) / 5.0 + Double.random(in: 8...14)
-            generated.append(
-                JellyfishParticle(
-                    xRatio: CGFloat.random(in: 0.05...0.95),
-                    size: size,
-                    duration: duration,
-                    delay: Double(i) * Double.random(in: 1.5...3.0),
-                    opacity: Double.random(in: 0.4...0.7),
-                    animationSpeed: Double.random(in: 0.35...0.65),
-                    horizontalSway: CGFloat.random(in: 5...16)
-                )
-            )
-        }
-        self.particles = generated.shuffled()
-    }
-
     var body: some View {
         ZStack {
             ForEach(particles) { particle in
@@ -128,6 +82,38 @@ struct JellyfishBackgroundView: View {
         .ignoresSafeArea()
         .allowsHitTesting(false)
     }
+
+    /// パーティクルを一度だけ生成するファクトリ
+    static func generateParticles() -> [JellyfishParticle] {
+        let sizePresets: [ClosedRange<CGFloat>] = [
+            40...55, 65...85, 95...120, 130...160
+        ]
+        var generated: [JellyfishParticle] = []
+        for (i, range) in sizePresets.enumerated() {
+            let size = CGFloat.random(in: range)
+            let duration = Double(size) / 5.0 + Double.random(in: 8...14)
+            generated.append(JellyfishParticle(
+                xRatio: CGFloat.random(in: 0.05...0.95), size: size, duration: duration,
+                delay: Double(i) * Double.random(in: 1.5...3.0),
+                opacity: Double.random(in: 0.4...0.7),
+                animationSpeed: Double.random(in: 0.35...0.65),
+                horizontalSway: CGFloat.random(in: 5...16)
+            ))
+        }
+        for i in 4..<6 {
+            let range = sizePresets[Int.random(in: 0..<sizePresets.count)]
+            let size = CGFloat.random(in: range)
+            let duration = Double(size) / 5.0 + Double.random(in: 8...14)
+            generated.append(JellyfishParticle(
+                xRatio: CGFloat.random(in: 0.05...0.95), size: size, duration: duration,
+                delay: Double(i) * Double.random(in: 1.5...3.0),
+                opacity: Double.random(in: 0.4...0.7),
+                animationSpeed: Double.random(in: 0.35...0.65),
+                horizontalSway: CGFloat.random(in: 5...16)
+            ))
+        }
+        return generated.shuffled()
+    }
 }
 
 // MARK: - 画面1: ホーム画面
@@ -137,12 +123,20 @@ struct HomeView: View {
     @Query(sort: \Material.createdAt, order: .reverse) private var materials: [Material]
 
     @State private var showNewMaterial = false
-    @State private var appearAnimation = false
     @State private var dailyTip: String = ""
+    
+    // 要素ごとの順次フェードイン
+    @State private var showHeader = false
+    @State private var showStats = false
+    @State private var showQuickStart = false
+    @State private var showRecent = false
+    @State private var showJellyfish = false  // クラゲはフェードイン後に表示
+    @State private var jellyfishParticles: [JellyfishParticle] = JellyfishBackgroundView.generateParticles()
     
     // オンボーディング
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var onboardingStep = 1
+    @State private var onboardingReady = false  // フェードイン完了後にオンボーディングを開始するフラグ
 
     private var todayStudyCount: Int {
         let calendar = Calendar.current
@@ -178,34 +172,36 @@ struct HomeView: View {
             ZStack {
                 AppColors.background.ignoresSafeArea()
 
-                // 背景クラゲアニメーション
-                JellyfishBackgroundView()
+                // 背景クラゲアニメーション（フェードイン完了後に表示）
+                if showJellyfish {
+                    JellyfishBackgroundView(particles: jellyfishParticles)
+                }
 
                 ScrollView {
                     VStack(spacing: 24) {
                         // ヘッダーカード
                         headerCard
-                            .opacity(appearAnimation ? 1 : 0)
-                            .offset(y: appearAnimation ? 0 : 15)
+                            .opacity(showHeader ? 1 : 0)
+                            .offset(y: showHeader ? 0 : 20)
                             .anchorPreference(key: OnboardingAnchorKey.self, value: .bounds, transform: { [1: $0] })
 
                         // 統計カード
                         statsSection
-                            .opacity(appearAnimation ? 1 : 0)
-                            .offset(y: appearAnimation ? 0 : 15)
+                            .opacity(showStats ? 1 : 0)
+                            .offset(y: showStats ? 0 : 20)
                             .anchorPreference(key: OnboardingAnchorKey.self, value: .bounds, transform: { [2: $0] })
 
                         // クイックスタート
                         quickStartSection
-                            .opacity(appearAnimation ? 1 : 0)
-                            .offset(y: appearAnimation ? 0 : 15)
+                            .opacity(showQuickStart ? 1 : 0)
+                            .offset(y: showQuickStart ? 0 : 20)
                             .anchorPreference(key: OnboardingAnchorKey.self, value: .bounds, transform: { [3: $0] })
 
                         // 最近の教材
                         if !recentMaterials.isEmpty {
                             recentSection
-                                .opacity(appearAnimation ? 1 : 0)
-                                .offset(y: appearAnimation ? 0 : 15)
+                                .opacity(showRecent ? 1 : 0)
+                                .offset(y: showRecent ? 0 : 20)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -248,17 +244,40 @@ struct HomeView: View {
                 if dailyTip.isEmpty {
                     dailyTip = studyTips.randomElement() ?? studyTips[0]
                 }
-                withAnimation(.easeOut(duration: 0.8)) {
-                    appearAnimation = true
+                // 要素ごとに順番にフェードイン（0.4秒間隔で順次表示）
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeOut(duration: 0.8)) { showHeader = true }
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                    withAnimation(.easeOut(duration: 0.8)) { showStats = true }
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) {
+                    withAnimation(.easeOut(duration: 0.8)) { showQuickStart = true }
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    withAnimation(.easeOut(duration: 0.8)) { showRecent = true }
+                }
+                // カードフェードイン完了後にクラゲを表示（GPU負荷を分散）
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    withAnimation(.easeIn(duration: 1.0)) { showJellyfish = true }
+                }
+                // フェードイン完了後にオンボーディングを開始
+                if !hasCompletedOnboarding {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+                        withAnimation(.easeIn(duration: 0.4)) {
+                            onboardingReady = true
+                        }
+                    }
                 }
             }
         }
         .overlayPreferenceValue(OnboardingAnchorKey.self) { anchors in
-            if !hasCompletedOnboarding {
+            if !hasCompletedOnboarding && onboardingReady {
                 GeometryReader { geo in
                     coachMarkOverlay(anchors: anchors, geo: geo)
                 }
                 .ignoresSafeArea()
+                .transition(.opacity)
             }
         }
     }
@@ -669,7 +688,7 @@ extension HomeView {
         case 2:
             return "学習の進捗がひと目でわかります。\n毎日のリコール回数を増やしましょう！"
         case 3:
-            return "ここから教材の登録・アクティブリコールができます。\nマイク入力やカメラからAIで自動生成！"
+            return "ここから教材の登録・アクティブリコールができます。\nマイク入力やカメラからAIで自動生成もできる！"
         default:
             return ""
         }
