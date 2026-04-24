@@ -29,7 +29,7 @@
 
 /* Begin PBXFileReference section */
 		02D3DD622F8E7DED00434C67 /* Jellyfish.lottie */ = {isa = PBXFileReference; lastKnownFileType = file; path = Jellyfish.lottie; sourceTree = "<group>"; };
-		07A828BD50228D0B7FE82D69 /* Seaweed.lottie */ = {isa = PBXFileReference; includeInIndex = 1; path = Seaweed.lottie; sourceTree = "<group>"; };
+		07A828BD50228D0B7FE82D69 /* Seaweed.lottie */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = Seaweed.lottie; sourceTree = "<group>"; };
 		75F1BDAA7AB0E5E127F08852 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A20000010000000000000001 /* MindRecallerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MindRecallerApp.swift; sourceTree = "<group>"; };
 		A20000010000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -319,9 +319,11 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mindrecaller.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -353,9 +355,11 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mindrecaller.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
