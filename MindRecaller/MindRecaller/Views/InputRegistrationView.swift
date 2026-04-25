@@ -256,11 +256,18 @@ struct InputRegistrationView: View {
             .padding(.vertical, 20)
             
             ScrollView {
-                Text(speechRecognizer.transcript.isEmpty ? "マイクボタンを押して話し始めてください..." : speechRecognizer.transcript)
-                    .font(.system(size: 18))
-                    .foregroundColor(speechRecognizer.transcript.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
-                    .multilineTextAlignment(.center)
-                    .padding()
+                Group {
+                    if speechRecognizer.transcript.isEmpty {
+                        Text("マイクボタンを押して話し始めてください...")
+                            .foregroundColor(AppColors.textSecondary)
+                    } else {
+                        Text(speechRecognizer.transcript)
+                            .foregroundColor(AppColors.textPrimary)
+                    }
+                }
+                .font(.system(size: 18))
+                .multilineTextAlignment(.center)
+                .padding()
             }
             .frame(maxHeight: 200)
             .background(AppColors.surface)
@@ -278,7 +285,7 @@ struct InputRegistrationView: View {
                     let generator = UIImpactFeedbackGenerator(style: .medium)
                     generator.impactOccurred()
                 }) {
-                    Text(speechRecognizer.isRecording ? "停止" : "録音開始")
+                    Text(LocalizedStringKey(speechRecognizer.isRecording ? "停止" : "録音開始"))
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
