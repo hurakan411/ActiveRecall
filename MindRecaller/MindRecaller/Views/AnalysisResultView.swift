@@ -82,7 +82,7 @@ struct AnalysisResultView: View {
             HStack(spacing: 6) {
                 Image(systemName: studyLog.scoreLevel.icon)
                     .foregroundColor(AppColors.scoreColor(studyLog.scoreLevel))
-                Text(studyLog.scoreLevel.rawValue)
+                Text(LocalizedStringKey(studyLog.scoreLevel.rawValue))
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(AppColors.scoreColor(studyLog.scoreLevel))
             }
@@ -234,7 +234,7 @@ struct ScoreBar: View {
     let title: String; let score: Int; let color: Color
     var body: some View {
         VStack(spacing: 10) {
-            Text(title).font(.system(size: 13, weight: .semibold)).foregroundColor(AppColors.textSecondary)
+            Text(LocalizedStringKey(title)).font(.system(size: 13, weight: .semibold)).foregroundColor(AppColors.textSecondary)
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 6).fill(AppColors.border).frame(height: 10)
                 GeometryReader { geo in

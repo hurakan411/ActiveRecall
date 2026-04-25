@@ -62,6 +62,7 @@ app.add_middleware(
 class AnalyzeRequest(BaseModel):
     """インプット解析リクエスト"""
     image: str  # Base64エンコードされた画像データ
+    lang: str = "ja"  # 言語パラメータ
 
 
 class AnalyzeResponse(BaseModel):
@@ -74,6 +75,7 @@ class ScoreRequest(BaseModel):
     """想起採点リクエスト"""
     sourceText: str
     recallText: str
+    lang: str = "ja"  # 言語パラメータ
 
 
 class ScoreResponse(BaseModel):
@@ -102,7 +104,25 @@ async def health():
 # 4.1 インプット解析エンドポイント
 # ============================================================
 
-ANALYZE_PROMPT = """あなたは教材テキスト抽出の専門家です。
+def get_analyze_prompt(lang: str) -> str:
+    if lang.startswith("en"):
+        return """You are an educational text extraction expert.
+From the given image, extract and structure text suitable for study material.
+
+Respond ONLY with the following JSON format (no markdown, no explanations):
+{
+    "title": "A concise title (under 15 words) IN ENGLISH",
+    "sourceText": "The extracted text preserving bullet points and paragraphs. IF EXTRACTED TEXT IS NOT IN ENGLISH, TRANSLATE IT TO ENGLISH."
+}
+
+Notes:
+- Accurately extract all text from the image.
+- If there are charts or diagrams, explain their contents in text.
+- The title must represent the content clearly in English.
+- The sourceText should be translated to English if the original image is in another language.
+- Ensure the output strictly uses English.
+"""
+    return """あなたは教材テキスト抽出の専門家です。
 与えられた画像から、学習教材として利用できるテキストを構造化して抽出してください。
 
 以下のJSON形式で回答してください（JSONのみ出力、マークダウンや説明文は不要）:
@@ -130,7 +150,7 @@ async def analyze_input(req: AnalyzeRequest):
             {
                 "role": "user",
                 "parts": [
-                    {"text": ANALYZE_PROMPT},
+                    {"text": get_analyze_prompt(req.lang)},
                     {
                         "inline_data": {
                             "mime_type": "image/jpeg",
@@ -171,7 +191,44 @@ async def analyze_input(req: AnalyzeRequest):
 # 4.2 想起採点エンドポイント
 # ============================================================
 
-SCORE_PROMPT_TEMPLATE = """あなたは学習効果の評価専門家です。
+def get_score_prompt(lang: str, source_text: str, recall_text: str) -> str:
+    if lang.startswith("en"):
+        return f"""You are an expert in evaluating learning effectiveness.
+Evaluate the user's recalled text against the original source text and provide a detailed score and analysis.
+
+[Original Source Text]
+{source_text}
+
+[User's Recalled Text]
+{recall_text}
+
+Evaluate based on the following criteria and respond in JSON format ONLY:
+
+1. logicScore: Calculate the "pure coverage rate (%)" (0-100) of how many semantic/logic elements from the source are covered in the user's text. Do not be overly generous. If they missed half, output 50.
+2. termScore: Calculate the "pure coverage rate (%)" (0-100) of how many specific keywords/terms/proper nouns from the source are included in the user's text.
+3. logicFeedback: Provide overall feedback IN ENGLISH ONLY. Briefly mention what was done well and what needs improvement in about 20-30 words.
+4. highlightedSegments: Split the original text into short semantic segments (phrases or short sentences). Array of objects indicating if each segment was covered.
+
+highlightedSegments Rules:
+- The entire original text must be divided into contiguous segments.
+- Each segment should be a meaningful chunk.
+- Include newline characters ("\\n") as standalone segments where appropriate.
+- "recalled": true if the user covered the concept, false otherwise.
+- Completely reassembling all segment text values must perfectly match the original text.
+
+Format:
+{{
+    "logicScore": 75,
+    "termScore": 60,
+    "logicFeedback": "Feedback text...",
+    "highlightedSegments": [
+        {{"text": "Segment 1 text", "recalled": true}},
+        {{"text": "Segment 2 text", "recalled": false}},
+        {{"text": "\\n", "recalled": true}}
+    ]
+}}
+"""
+    return f"""あなたは学習効果の評価専門家です。
 ユーザーが教材の内容を記憶から想起した結果を、元のテキストと比較して詳細に採点・分析してください。
 
 【元のテキスト（正解）】
@@ -219,7 +276,8 @@ async def score_recall(req: ScoreRequest):
         raise HTTPException(status_code=400, detail="recallTextが空です")
 
     try:
-        prompt = SCORE_PROMPT_TEMPLATE.format(
+        prompt = get_score_prompt(
+            lang=req.lang,
             source_text=req.sourceText,
             recall_text=req.recallText,
         )

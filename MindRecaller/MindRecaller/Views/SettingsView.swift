@@ -54,6 +54,24 @@ struct SettingsView: View {
                     )
                 }
                 
+                // 言語設定セクション
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("言語 / Language")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(AppColors.textSecondary)
+                        .padding(.horizontal, 4)
+                        .padding(.top, 8)
+                    
+                    VStack(spacing: 0) {
+                        LanguagePickerRow()
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(AppColors.border, lineWidth: 1)
+                    )
+                }
+                
                 // その他の情報セクション
                 VStack(spacing: 0) {
                     HStack {
@@ -80,6 +98,29 @@ struct SettingsView: View {
         .background(AppColors.background)
         .navigationTitle("設定")
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct LanguagePickerRow: View {
+    @AppStorage("appLanguage") private var appLanguage: AppLanguage = .system
+    
+    var body: some View {
+        HStack {
+            Text("アプリの言語")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(AppColors.textPrimary)
+            Spacer()
+            Picker("言語", selection: $appLanguage) {
+                ForEach(AppLanguage.allCases) { lang in
+                    Text(lang.displayName).tag(lang)
+                }
+            }
+            .pickerStyle(.menu)
+            .tint(AppColors.textSecondary)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(AppColors.surface)
     }
 }
 

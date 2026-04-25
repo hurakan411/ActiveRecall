@@ -40,13 +40,13 @@ struct ContentView: View {
         TabView(selection: $appRouter.selectedTab) {
             HomeView()
                 .tabItem {
-                    Label(TabSelection.home.rawValue, systemImage: TabSelection.home.icon)
+                    Label(LocalizedStringKey(TabSelection.home.rawValue), systemImage: TabSelection.home.icon)
                 }
                 .tag(TabSelection.home)
 
             MaterialLibraryView()
                 .tabItem {
-                    Label(TabSelection.library.rawValue, systemImage: TabSelection.library.icon)
+                    Label(LocalizedStringKey(TabSelection.library.rawValue), systemImage: TabSelection.library.icon)
                 }
                 .tag(TabSelection.library)
         }

@@ -296,7 +296,7 @@ struct HomeView: View {
                         .tracking(1.2)
                 }
                 
-                Text(dailyTip)
+                Text(LocalizedStringKey(dailyTip))
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(AppColors.textPrimary)
                     .lineSpacing(6)
@@ -479,12 +479,12 @@ struct StatCard: View {
                 Text(value)
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(AppColors.textPrimary)
-                Text(unit)
+                Text(LocalizedStringKey(unit))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(AppColors.textSecondary)
             }
 
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(AppColors.textSecondary)
         }
@@ -669,7 +669,7 @@ extension HomeView {
     }
     
     private func tooltipBubble(message: String) -> some View {
-        Text(message)
+        Text(LocalizedStringKey(message))
             .font(.system(size: 15, weight: .bold))
             .multilineTextAlignment(.center)
             .foregroundColor(AppColors.textPrimary)

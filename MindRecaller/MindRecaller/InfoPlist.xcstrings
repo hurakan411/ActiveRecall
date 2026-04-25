@@ -1,0 +1,26 @@
+{
+  "sourceLanguage" : "ja",
+  "strings" : {
+    "NSCameraUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We need access to your camera to take pictures of study materials."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+        "localizations" : {
+            "en" : {
+            "stringUnit" : {
+                "state" : "translated",
+                "value" : "We need access to your microphone to record your voice."
+            }
+            }
+        }
+    }
+  },
+  "version" : "1.0"
+}

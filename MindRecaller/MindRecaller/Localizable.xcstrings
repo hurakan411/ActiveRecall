@@ -1,0 +1,946 @@
+{
+  "sourceLanguage": "ja",
+  "strings": {
+    "アクリコ | AI Active Recall": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akriko | AI Active Recall"
+          }
+        }
+      }
+    },
+    "今日": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Today"
+          }
+        }
+      }
+    },
+    "回": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Times"
+          }
+        }
+      }
+    },
+    "教材数": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Materials"
+          }
+        }
+      }
+    },
+    "件": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items"
+          }
+        }
+      }
+    },
+    "総学習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total Study"
+          }
+        }
+      }
+    },
+    "学習を始める": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Learning"
+          }
+        }
+      }
+    },
+    "新しい教材を登録して学習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register New Material"
+          }
+        }
+      }
+    },
+    "写真や動画から教材を登録して学習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study by registering materials from photos or videos."
+          }
+        }
+      }
+    },
+    "登録済みの教材を選択して学習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Study Existing Materials"
+          }
+        }
+      }
+    },
+    "ライブラリから教材を選んで復習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Review by selecting materials from your library."
+          }
+        }
+      }
+    },
+    "ランダムに復習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Random Review"
+          }
+        }
+      }
+    },
+    "最近の教材": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recent Materials"
+          }
+        }
+      }
+    },
+    "最高 %lld点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High Score: %lld pts"
+          }
+        }
+      }
+    },
+    "%lld回学習": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Studied %lld times"
+          }
+        }
+      }
+    },
+    "学習に役立つヒントが毎日届きます。\nモチベーションを高めましょう！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daily tips to help you learn.\nKeep your motivation high!"
+          }
+        }
+      }
+    },
+    "学習の進捗がひと目でわかります。\n毎日のリコール回数を増やしましょう！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "See your progress at a glance.\nIncrease your daily recall count!"
+          }
+        }
+      }
+    },
+    "ここから教材の登録・アクティブリコールができます。\nマイク入力やカメラからAIで自動生成もできる！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register materials and start Active Recall here.\nYou can also auto-generate using AI from the camera or microphone!"
+          }
+        }
+      }
+    },
+    "ACTIVE RECALL": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ACTIVE RECALL"
+          }
+        }
+      }
+    },
+    "この教材の内容を記憶から呼び起こし、\nできるだけ詳しく書き出してください。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recall the contents of this material from memory\nand write it out in as much detail as possible."
+          }
+        }
+      }
+    },
+    "入力": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input"
+          }
+        }
+      }
+    },
+    "全削除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete All"
+          }
+        }
+      }
+    },
+    "%lld 文字": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld chars"
+          }
+        }
+      }
+    },
+    "学習したキーワードや概念、流れなどを\n思い出して自由に書き出しましょう...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recall the keywords, concepts, and flow you learned\nand write freely..."
+          }
+        }
+      }
+    },
+    "聞き取っています...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listening..."
+          }
+        }
+      }
+    },
+    "AIで解析する": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyze with AI"
+          }
+        }
+      }
+    },
+    "AIが採点中...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is grading..."
+          }
+        }
+      }
+    },
+    "フィードバック": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback"
+          }
+        }
+      }
+    },
+    "元のテキスト": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Original Text"
+          }
+        }
+      }
+    },
+    "想起できた": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recalled successfully"
+          }
+        }
+      }
+    },
+    "想起できなかった": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to recall"
+          }
+        }
+      }
+    },
+    "もう一度リコール": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recall again"
+          }
+        }
+      }
+    },
+    "ホームに戻る": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back to Home"
+          }
+        }
+      }
+    },
+    "%lld 点": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld pts"
+          }
+        }
+      }
+    },
+    "アプリについて": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About App"
+          }
+        }
+      }
+    },
+    "利用規約": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Service"
+          }
+        }
+      }
+    },
+    "プライバシーポリシー": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        }
+      }
+    },
+    "言語 / Language": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
+          }
+        }
+      }
+    },
+    "バージョン": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version"
+          }
+        }
+      }
+    },
+    "アプリの言語": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Language"
+          }
+        }
+      }
+    },
+    "教材の登録方法を選択": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select how to register material"
+          }
+        }
+      }
+    },
+    "お好みの方法でテキストを入力し、\n学習教材として登録します": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter text in your preferred way\nto register as a study material"
+          }
+        }
+      }
+    },
+    "カメラで撮影": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo"
+          }
+        }
+      }
+    },
+    "写真から選択": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select from Photos"
+          }
+        }
+      }
+    },
+    "テキストを直接入力": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter text manually"
+          }
+        }
+      }
+    },
+    "音声で入力": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voice Input"
+          }
+        }
+      }
+    },
+    "音声でテキストを入力": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter text by voice"
+          }
+        }
+      }
+    },
+    "完了": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "タイトル": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
+          }
+        }
+      }
+    },
+    "ソーステキスト": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Source Text"
+          }
+        }
+      }
+    },
+    "AI抽出済み・編集可能": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extracted by AI / Editable"
+          }
+        }
+      }
+    },
+    "タグ (最大3つまで)": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tags (Up to 3)"
+          }
+        }
+      }
+    },
+    "追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
+    "既存のタグから追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add from existing tags"
+          }
+        }
+      }
+    },
+    "AIがテキストを抽出中...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI is extracting text..."
+          }
+        }
+      }
+    },
+    "まだ教材がありません": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No materials yet"
+          }
+        }
+      }
+    },
+    "写真を撮って最初の教材を\n登録しましょう": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Take a photo to register\nyour first material"
+          }
+        }
+      }
+    },
+    "キャンセル": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "削除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "編集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "保存": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "警告": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning"
+          }
+        }
+      }
+    },
+    "エラー": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        }
+      }
+    },
+    "教材を登録": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Register Material"
+          }
+        }
+      }
+    },
+    "ライブラリ": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        }
+      }
+    },
+    "すべて": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All"
+          }
+        }
+      }
+    },
+    "タグで絞り込み": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter by Tag"
+          }
+        }
+      }
+    },
+    "教材を検索": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search Materials"
+          }
+        }
+      }
+    },
+    "「%@」を削除しますか？学習ログも全て削除されます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete \"%@\"? All study logs will also be deleted."
+          }
+        }
+      }
+    },
+    "教材を削除": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete Material"
+          }
+        }
+      }
+    },
+    "追加できる既存タグがありません": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No existing tags to add"
+          }
+        }
+      }
+    },
+    "教材を編集": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Material"
+          }
+        }
+      }
+    },
+    "設定": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "タイトルを入力": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Title"
+          }
+        }
+      }
+    },
+    "タグを入力": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Tag"
+          }
+        }
+      }
+    },
+    "リコール開始": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Recall"
+          }
+        }
+      }
+    },
+    "何も見ずに思い出すことが、記憶を最も強くします。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recalling without looking strengthens memory the most."
+          }
+        }
+      }
+    },
+    "間違えても大丈夫！それが脳の成長のサインです。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's okay to make mistakes! That's a sign of brain growth."
+          }
+        }
+      }
+    },
+    "復習は「読む」のではなく、「思い出す」のがコツ。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The trick to reviewing is not 'reading' but 'recalling'."
+          }
+        }
+      }
+    },
+    "エビングハウスの忘却曲線に打ち勝とう！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overcome Ebbinghaus's forgetting curve!"
+          }
+        }
+      }
+    },
+    "5分のリコールは、1時間の受動的な読書より効果的です。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A 5-minute recall is more effective than 1 hour of passive reading."
+          }
+        }
+      }
+    },
+    "「思い出そうとする時の負荷」が記憶を脳に定着させます。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The 'effort of trying to recall' anchors memories in the brain."
+          }
+        }
+      }
+    },
+    "少し忘れた頃に思い出すのが、最高のアクティブリコールです。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recalling when you've forgotten a little is the best active recall."
+          }
+        }
+      }
+    },
+    "インプット3割、アウトプット7割。これが学習の黄金比。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Input 30%, Output 70%. This is the golden ratio of learning."
+          }
+        }
+      }
+    },
+    "完璧でなくてもOK。言葉を絞り出した数だけ定着します。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It's OK if it's not perfect. Every word you squeeze out anchors the memory."
+          }
+        }
+      }
+    },
+    "昨日の自分を超えるために、今日のリコールを始めましょう！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start your recall today to surpass who you were yesterday!"
+          }
+        }
+      }
+    },
+    "思い出す時に脳神経がつながります。頑張りどころです！": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your neural network connects when you recall. This is where the effort pays off!"
+          }
+        }
+      }
+    },
+    "ホーム": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Home"
+          }
+        }
+      }
+    },
+    "素晴らしい": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excellent"
+          }
+        }
+      }
+    },
+    "良い": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Good Job"
+          }
+        }
+      }
+    },
+    "まずまず": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fair"
+          }
+        }
+      }
+    },
+    "もう少し": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needs Work"
+          }
+        }
+      }
+    },
+    "論理スコア": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logic Score"
+          }
+        }
+      }
+    },
+    "用語スコア": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Term Score"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

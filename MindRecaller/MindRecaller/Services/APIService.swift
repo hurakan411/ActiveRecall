@@ -25,8 +25,11 @@ class APIService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 60 // Gemini解析に時間がかかる可能性
 
+        let savedLang = UserDefaults.standard.string(forKey: "appLanguage") ?? "system"
+        let languageCode = (savedLang == "system") ? (Locale.current.language.languageCode?.identifier ?? "ja") : savedLang
         let body: [String: String] = [
-            "image": imageData.base64EncodedString()
+            "image": imageData.base64EncodedString(),
+            "lang": languageCode
         ]
         request.httpBody = try JSONEncoder().encode(body)
 
@@ -65,9 +68,12 @@ class APIService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = 60
 
+        let savedLang = UserDefaults.standard.string(forKey: "appLanguage") ?? "system"
+        let languageCode = (savedLang == "system") ? (Locale.current.language.languageCode?.identifier ?? "ja") : savedLang
         let body: [String: String] = [
             "sourceText": sourceText,
-            "recallText": recallText
+            "recallText": recallText,
+            "lang": languageCode
         ]
         request.httpBody = try JSONEncoder().encode(body)
 
