@@ -406,7 +406,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Select how to register material"
+            "value": "Select Registration Method"
           }
         }
       }
@@ -416,7 +416,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter text in your preferred way\nto register as a study material"
+            "value": "Input text using your preferred method \nand register it as a learning material."
           }
         }
       }
@@ -426,7 +426,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Take a photo"
+            "value": "Take a Photo"
           }
         }
       }
@@ -446,7 +446,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter text manually"
+            "value": "Type Text Manually"
           }
         }
       }
@@ -466,7 +466,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enter text by voice"
+            "value": "Input Text by Voice"
           }
         }
       }
@@ -506,7 +506,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Extracted by AI / Editable"
+            "value": "AI Extracted (Editable)"
           }
         }
       }
@@ -516,7 +516,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tags (Up to 3)"
+            "value": "Tags (Max 3)"
           }
         }
       }
@@ -536,7 +536,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add from existing tags"
+            "value": "Add from Existing Tags"
           }
         }
       }
@@ -706,7 +706,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No existing tags to add"
+            "value": "No existing tags available"
           }
         }
       }
@@ -957,6 +957,96 @@
           "stringUnit": {
             "state": "translated",
             "value": "This Privacy Policy establishes how we handle user information in the smartphone learning application \"Acrico | AI Active Recall\" (hereinafter referred to as \"App\").\n\n1. Information Collected and its Purpose\nThe App collects the following information for the specified purposes:\n\n[Image and Text Data]\nContent: Images taken or selected by the User to register learning materials, and text entered (source text and recall text for scoring).\nPurpose: To provide text extraction, material summary/generation, and grading/feedback using an AI model (external service).\n\n[Learning History Data]\nContent: Activity history such as recall count, scores, and tags.\nPurpose: To display grades and optimize the learning experience.\n\n* Data inputted by the User (saved locally using SwiftData, etc.) is strictly stored on the User's device. The Developer does not collect or view it.\n\n2. External APIs and Third-Party Disclosure\nTo provide core AI functions, the App transmits the image and text data inputted by the User to the Gemini API provided by Google LLC through our backend server.\n- The transmitted data is processed mechanically solely for analysis by the API.\n- The handling of data relating to this transmission complies with Google's privacy requirements.\n- We will not sell or provide personal information or learning data to third parties for any other purpose unless there is explicit consent or required by law.\n\n3. Disclaimers\nThe Developer assumes no responsibility for any trouble or damage caused by the use of this App. The AI processing accuracy is not 100% guaranteed.\n\n4. Changes to Privacy Policy\nThe Developer may modify this Privacy Policy without prior notice. Important changes will be announced in the App.\n\n5. Inquiries\nFor inquiries regarding this Privacy Policy, please contact developer support.\n\nEstablished: April 14, 2026"
+          }
+        }
+      }
+    },
+    "マイクボタンを押して話し始めてください...": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tap the mic button and start speaking..."
+          }
+        }
+      }
+    },
+    "停止": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        }
+      }
+    },
+    "録音開始": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Recording"
+          }
+        }
+      }
+    },
+    "教材を追加": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Material"
+          }
+        }
+      }
+    },
+    "内容を確認": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirm Content"
+          }
+        }
+      }
+    },
+    "AI解析に失敗しました。テキストを手動で入力してください。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI Analysis Failed. Please enter text manually."
+          }
+        }
+      }
+    },
+    "マイクと音声認識のアクセスが許可されていません。設定から許可してください。": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone/Speech Recognition access denied. Please allow in Settings."
+          }
+        }
+      }
+    },
+    "マイクの設定に失敗しました": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to configure microphone"
+          }
+        }
+      }
+    },
+    "録音の開始に失敗しました": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed to start recording"
           }
         }
       }

@@ -52,7 +52,7 @@ struct InputRegistrationView: View {
                     analyzingOverlay
                 }
             }
-            .navigationTitle(inputMode == .selection ? "教材を追加" : "内容を確認")
+            .navigationTitle(LocalizedStringKey(inputMode == .selection ? "教材を追加" : "内容を確認"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
