@@ -1,26 +1,46 @@
 {
-  "sourceLanguage" : "ja",
-  "strings" : {
-    "NSCameraUsageDescription" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "We need access to your camera to take pictures of study materials."
+  "sourceLanguage": "ja",
+  "strings": {
+    "NSCameraUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We need access to your camera to take pictures of study materials."
           }
         }
       }
     },
-    "NSMicrophoneUsageDescription" : {
-        "localizations" : {
-            "en" : {
-            "stringUnit" : {
-                "state" : "translated",
-                "value" : "We need access to your microphone to record your voice."
-            }
-            }
+    "NSMicrophoneUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We need access to your microphone to record your voice."
+          }
         }
+      }
+    },
+    "CFBundleDisplayName": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akriko"
+          }
+        }
+      }
+    },
+    "CFBundleName": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Akriko"
+          }
+        }
+      }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }
